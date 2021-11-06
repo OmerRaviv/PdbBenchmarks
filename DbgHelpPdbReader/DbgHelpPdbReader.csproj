@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PdbReadingBenchmarks.Contracts\PdbReadingBenchmarks.Contracts.csproj" />
+        <PackageReference Include="Vanara.PInvoke.DbgHelp" Version="3.3.13" />
+    </ItemGroup>
+
+</Project>

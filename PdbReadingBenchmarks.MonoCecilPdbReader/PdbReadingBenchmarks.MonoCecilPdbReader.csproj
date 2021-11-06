@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>9</LangVersion>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+        <PackageReference Include="System.Reflection.Metadata" Version="1.6.0" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\PdbReadingBenchmarks.Contracts\PdbReadingBenchmarks.Contracts.csproj" />
+    </ItemGroup>
+</Project>

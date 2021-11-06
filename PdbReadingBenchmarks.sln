@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks", "PdbReadingBenchmarks\PdbReadingBenchmarks.csproj", "{F10C1AB6-981B-4A61-BF4C-360367332DEE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Readers", "Readers", "{843F00AD-4166-4EFC-AA17-C7A4E9620DBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.MonoCecilPdbReader", "PdbReadingBenchmarks.MonoCecilPdbReader\PdbReadingBenchmarks.MonoCecilPdbReader.csproj", "{97D30E4B-9B13-4649-880A-AAF557EDD59C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.Contracts", "PdbReadingBenchmarks.Contracts\PdbReadingBenchmarks.Contracts.csproj", "{F488AFDB-C013-4BEF-9C03-A19BCD3C845A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.DiaNativeSymReader", "PdbReadingBenchmarks.DiaNativeSymReader\PdbReadingBenchmarks.DiaNativeSymReader.csproj", "{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.MjsabbyWindowsPdbReader", "PdbReadingBenchmarks.MjsabbyWindowsPdbReader\PdbReadingBenchmarks.MjsabbyWindowsPdbReader.csproj", "{C3DD43D0-10E9-416D-BE49-20B94BD13F6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbgHelpPdbReader", "DbgHelpPdbReader\DbgHelpPdbReader.csproj", "{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F10C1AB6-981B-4A61-BF4C-360367332DEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F10C1AB6-981B-4A61-BF4C-360367332DEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F10C1AB6-981B-4A61-BF4C-360367332DEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F10C1AB6-981B-4A61-BF4C-360367332DEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97D30E4B-9B13-4649-880A-AAF557EDD59C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97D30E4B-9B13-4649-880A-AAF557EDD59C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97D30E4B-9B13-4649-880A-AAF557EDD59C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97D30E4B-9B13-4649-880A-AAF557EDD59C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F488AFDB-C013-4BEF-9C03-A19BCD3C845A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F488AFDB-C013-4BEF-9C03-A19BCD3C845A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F488AFDB-C013-4BEF-9C03-A19BCD3C845A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F488AFDB-C013-4BEF-9C03-A19BCD3C845A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3DD43D0-10E9-416D-BE49-20B94BD13F6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3DD43D0-10E9-416D-BE49-20B94BD13F6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3DD43D0-10E9-416D-BE49-20B94BD13F6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3DD43D0-10E9-416D-BE49-20B94BD13F6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{97D30E4B-9B13-4649-880A-AAF557EDD59C} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
+		{F488AFDB-C013-4BEF-9C03-A19BCD3C845A} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
+		{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
+		{C3DD43D0-10E9-416D-BE49-20B94BD13F6F} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
+		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
+	EndGlobalSection
+EndGlobal

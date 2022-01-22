@@ -12,7 +12,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.DiaNat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.MjsabbyWindowsPdbReader", "PdbReadingBenchmarks.MjsabbyWindowsPdbReader\PdbReadingBenchmarks.MjsabbyWindowsPdbReader.csproj", "{C3DD43D0-10E9-416D-BE49-20B94BD13F6F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbgHelpPdbReader", "DbgHelpPdbReader\DbgHelpPdbReader.csproj", "{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.DbgHelpPdbReader", "PdbReadingBenchmarks.DbgHelpPdbReader\PdbReadingBenchmarks.DbgHelpPdbReader.csproj", "{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReadingBenchmarks.DnlibReader", "PdbReadingBenchmarks.DnlibReader\PdbReadingBenchmarks.DnlibReader.csproj", "{596E0AD2-B01B-4D95-80CD-F4ED5D30755F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,10 @@ Global
 		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{596E0AD2-B01B-4D95-80CD-F4ED5D30755F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{596E0AD2-B01B-4D95-80CD-F4ED5D30755F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{596E0AD2-B01B-4D95-80CD-F4ED5D30755F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{596E0AD2-B01B-4D95-80CD-F4ED5D30755F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{97D30E4B-9B13-4649-880A-AAF557EDD59C} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
@@ -51,5 +57,6 @@ Global
 		{3593E7FC-8EF6-40BF-9566-6B0C8F2EC417} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
 		{C3DD43D0-10E9-416D-BE49-20B94BD13F6F} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
 		{68D7C802-98FC-484E-BCA2-B3E2A3B242BB} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
+		{596E0AD2-B01B-4D95-80CD-F4ED5D30755F} = {843F00AD-4166-4EFC-AA17-C7A4E9620DBB}
 	EndGlobalSection
 EndGlobal

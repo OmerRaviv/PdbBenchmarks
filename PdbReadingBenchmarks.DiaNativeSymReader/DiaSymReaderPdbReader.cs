@@ -21,10 +21,8 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
 
         public (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
         {
-            var pdbStream = File.OpenRead(_pdbFullPath);
-            pdbStream.Position = 0;
-
-            _symReader = CreateNativeSymReader(pdbStream);
+            
+            _symReader ??= CreateNativeSymReader();
             var symUnmanagedMethod = GetMethod(methodMetadataToken);
             return (GetSequencePoints(symUnmanagedMethod), GetLocalVariables(symUnmanagedMethod));
         }
@@ -62,7 +60,7 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         [DllImport("Microsoft.DiaSymReader.Native.amd64.dll", EntryPoint = "CreateSymReader")]
         private extern static void CreateSymReader64(ref Guid id, [MarshalAs(UnmanagedType.IUnknown)]out object symReader);
 
-        private ISymUnmanagedReader3 _symReader;
+        private static ISymUnmanagedReader3 _symReader;
 
 
         private IList<SequencePoint> GetSequencePoints(ISymUnmanagedMethod method)
@@ -106,8 +104,11 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
             return method;
         }
 
-        private static ISymUnmanagedReader3 CreateNativeSymReader(Stream pdbStream)
+        private  ISymUnmanagedReader3 CreateNativeSymReader()
         {
+            var pdbStream = File.OpenRead(_pdbFullPath);
+            pdbStream.Position = 0;
+
             object symReader = null;
             var guid = default(Guid);
             if (IntPtr.Size == 4)

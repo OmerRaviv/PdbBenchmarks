@@ -122,8 +122,8 @@ namespace Zodiacon.DebugHelp {
 			return Win32.SymFromName(_hProcess, name, ref symbol);
 		}
 
-		public bool GetSymbolFromToken( uint token, ref SymbolInfo symbol) {
-			return Win32.SymFromToken(_hProcess,0,  token, ref symbol);
+		public bool GetSymbolFromToken(uint token, ulong baseAddress, ref SymbolInfo symbol) {
+			return Win32.SymFromToken(_hProcess,baseAddress,  token, ref symbol);
 		}
 		
 		
@@ -131,7 +131,7 @@ namespace Zodiacon.DebugHelp {
 			return Win32.SymFromIndex(_hProcess, dllBase, index, ref symbol);
 		}
 
-		public ICollection<SymbolInfo> EnumSymbols(ulong baseAddress, string mask = "*!*") {
+		public IList<SymbolInfo> EnumSymbols(ulong baseAddress, string mask = "*!*") {
 			var symbols = new List<SymbolInfo>(16);
 
 			Win32.SymEnumSymbols(_hProcess, baseAddress, mask, (ref SymbolInfo symbol, uint size, IntPtr context) => {

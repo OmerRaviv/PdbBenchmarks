@@ -3,39 +3,34 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using PdbReadingBenchmarks.Contracts;
 using Vanara.PInvoke;
 using Zodiacon.DebugHelp;
 using static Vanara.PInvoke.DbgHelp;
 
-namespace DbgHelpPdbReader
+namespace PdbReadingBenchmarks.DbgHelpPdbReader
 {
+    
     public class DebugHelpPdbReader : IDebugInfoProvider
     {
         
         private readonly string _assemblyFullPath;
-        private readonly string _pdbFullPath;
         private static SymbolHandler? _symbolHandler;
         private static ulong? _address;
 
 
-        public DebugHelpPdbReader(string assemblyFullPath, string pdbFullPath)
+        public DebugHelpPdbReader(string assemblyFullPath)
         {
             _assemblyFullPath = assemblyFullPath;
-            _pdbFullPath = pdbFullPath;
         }
         public unsafe (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
         {
             
             using var currentProcess = Process.GetCurrentProcess();
             _symbolHandler ??= SymbolHandler.CreateFromProcess(currentProcess.Id, SymbolOptions.Debug);
-            //var symbolHandler = new SymbolHandler(currentProcess.SafeHandle.DangerousGetHandle(), true);
-            // foreach (var enumModule in symbolHandler.EnumModules())
-            // {
-            //     Console.WriteLine($"->  {enumModule.Name} : {enumModule.Base}");
-            // }
-
+            
             _address ??= _symbolHandler.LoadSymbolsForModule(_assemblyFullPath);
 
             var symbol = GetSymbolForToken(_symbolHandler, _address.Value, methodMetadataToken);
@@ -58,20 +53,18 @@ namespace DbgHelpPdbReader
                 Win32Utils.ThrowOnWin32Error();
             }
 
-            //
-            // // The last parameter will be passed to every call to EnumParamsCallback.
-            foreach (var enumSymbol in _symbolHandler.EnumSymbols(0, null))
-            {
-               // Console.WriteLine($" IN ENUM ->>>> {enumSymbol.Name} {enumSymbol.Index}");
-
-            }
             
-            // if(!SymEnumSymbols(hProcess, BaseOfDll: 0, Mask: null, EnumParamsCallback))
-             // {
-             // getting just 1 character...
-             //     Win32Utils.ThrowOnWin32Error();
-             // }
-            return default;
+            // // The last parameter will be passed to every call to EnumParamsCallback.
+            IList<SymbolInfo> symbols = _symbolHandler.EnumSymbols(0, null);
+            var variables = new List<Variable>(symbols.Count);
+            foreach (var symbolInfo in symbols)
+            {
+                variables.Add(new Variable(symbolInfo.Index, symbolInfo.Name));
+            }
+
+            
+            var sequencePoints = new List<SequencePoint>();
+            return (sequencePoints,variables);
         }
 
         private bool EnumParamsCallback(in SYMBOL_INFO psyminfo, uint symbolsize, IntPtr usercontext)
@@ -84,24 +77,20 @@ namespace DbgHelpPdbReader
         private static SymbolInfo GetSymbolForToken(SymbolHandler? symbolHandler, ulong address,
             int methodMetadataToken)
         {
-            foreach (var enumSymbol in symbolHandler.EnumSymbols(address))
-            {
-                long methodToken = enumSymbol.Value;
-                if (methodMetadataToken == methodToken) return enumSymbol;
-            }
-            
-            SymbolInfo infoFromName = default;
-            symbolHandler.GetSymbolFromName("RunTests", ref infoFromName);
-            
             SymbolInfo info = default;
             info.Init();
-            if (!symbolHandler.GetSymbolFromToken((uint)methodMetadataToken, ref info))
+            if (!symbolHandler.GetSymbolFromToken((uint)methodMetadataToken, address,ref info))
             {
                 Win32Utils.ThrowOnWin32Error();
             }
-            
             return info;
-            return default;
+        }
+
+        public (int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromFileLine(string filePath, int lineNumber, int column)
+        {
+            
+     //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
+            return (default, default);
         }
     }
 }

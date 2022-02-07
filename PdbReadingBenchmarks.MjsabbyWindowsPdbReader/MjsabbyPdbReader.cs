@@ -19,18 +19,26 @@ namespace WindowsPdbReader
             _assemblyFullPath = assemblyFullPath;
             _pdbFullPath = pdbFullPath;
         }
+
         public (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
         {
-
             var pdbStream = File.OpenRead(_pdbFullPath);
-            var ff = GetSourceLineInfo(pdbStream, (uint)methodMetadataToken, 0,out int  age, out Guid guid,
+            var ff = GetSourceLineInfo(pdbStream, (uint)methodMetadataToken, 0, out int age, out Guid guid,
                 out string sourceFile, out int sourceLine, out int sourceColumn);
             return (null, null);
         }
-        
-        private static bool GetSourceLineInfo(Stream fs, uint token, uint iloffset, out int age, out Guid guid, out string sourceFile, out int sourceLine, out int sourceColumn)
+
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(string filePath, int line,
+            int column)
         {
-            if (ReadPdbHeader(fs, out var pageSize, out var freePageMap, out var pagesUsed, out var directorySize, out var zero))
+            throw new NotImplementedException();
+        }
+
+        private static bool GetSourceLineInfo(Stream fs, uint token, uint iloffset, out int age, out Guid guid,
+            out string sourceFile, out int sourceLine, out int sourceColumn)
+        {
+            if (ReadPdbHeader(fs, out var pageSize, out var freePageMap, out var pagesUsed, out var directorySize,
+                out var zero))
             {
                 var directoryPages = (((directorySize + pageSize - 1) / pageSize * 4) + pageSize - 1) / pageSize;
 
@@ -58,7 +66,8 @@ namespace WindowsPdbReader
                     dbiStream.Read(pageAwarePdbReader, dbiStreamData);
 
                     IReadOnlyList<DbiModuleInfo> modules = LoadModules(dbiStreamData);
-                    GetSourceLineInfoInner(modules, msf, pageAwarePdbReader, names, token, iloffset, out sourceFile, out sourceLine, out sourceColumn);
+                    GetSourceLineInfoInner(modules, msf, pageAwarePdbReader, names, token, iloffset, out sourceFile,
+                        out sourceLine, out sourceColumn);
 
                     return true;
                 }
@@ -73,7 +82,9 @@ namespace WindowsPdbReader
             return false;
         }
 
-        private static void GetSourceLineInfoInner(IReadOnlyList<DbiModuleInfo> modules, MsfDirectory dir, PdbReader reader, IReadOnlyDictionary<int, string> names, uint token, uint iloffset, out string sourceFile, out int sourceLine, out int sourceColumn)
+        private static void GetSourceLineInfoInner(IReadOnlyList<DbiModuleInfo> modules, MsfDirectory dir,
+            PdbReader reader, IReadOnlyDictionary<int, string> names, uint token, uint iloffset, out string sourceFile,
+            out int sourceLine, out int sourceColumn)
         {
             sourceFile = string.Empty;
             sourceLine = 0;
@@ -91,13 +102,15 @@ namespace WindowsPdbReader
 
                     if (TryGetManProcSym(bits, in module, token, out ManProcSym sym))
                     {
-                        GetLineNumberInformation(bits, in module, sym.off + iloffset, names, out sourceFile, out sourceLine, out sourceColumn);
+                        GetLineNumberInformation(bits, in module, sym.off + iloffset, names, out sourceFile,
+                            out sourceLine, out sourceColumn);
                     }
                 }
             }
         }
 
-        private static bool TryGetManProcSym(ReadOnlySpan<byte> bits, in DbiModuleInfo module, uint token, out ManProcSym proc)
+        private static bool TryGetManProcSym(ReadOnlySpan<byte> bits, in DbiModuleInfo module, uint token,
+            out ManProcSym proc)
         {
             var offset = 0;
             var sig = InterpretInt32(bits, ref offset);
@@ -115,7 +128,7 @@ namespace WindowsPdbReader
                 var stop = offset + siz;
                 var rec = InterpretUInt16(bits, ref offset);
 
-                
+
                 switch ((SYM)rec)
                 {
                     case SYM.S_GMANPROC:
@@ -141,7 +154,9 @@ namespace WindowsPdbReader
             return false;
         }
 
-        private static void GetLineNumberInformation(in ReadOnlySpan<byte> streamData, in DbiModuleInfo module, uint functionOffset, IReadOnlyDictionary<int, string> names, out string sourceFile, out int sourceLine, out int sourceColumn)
+        private static void GetLineNumberInformation(in ReadOnlySpan<byte> streamData, in DbiModuleInfo module,
+            uint functionOffset, IReadOnlyDictionary<int, string> names, out string sourceFile, out int sourceLine,
+            out int sourceColumn)
         {
             sourceFile = string.Empty;
             sourceLine = 0;
@@ -160,12 +175,14 @@ namespace WindowsPdbReader
                 {
                     case DEBUG_S_SUBSECTION.LINES:
                     {
-                        ref readonly CV_LineSection sec = ref InterpretStruct<CV_LineSection>(in streamData, ref offset);
+                        ref readonly CV_LineSection
+                            sec = ref InterpretStruct<CV_LineSection>(in streamData, ref offset);
 
                         // BUG: Needs to match the bestPointSoFar model
                         if (functionOffset >= sec.off && functionOffset <= sec.off + sec.cod)
                         {
-                            ref readonly CV_SourceFile file = ref InterpretStruct<CV_SourceFile>(in streamData, ref offset);
+                            ref readonly CV_SourceFile file =
+                                ref InterpretStruct<CV_SourceFile>(in streamData, ref offset);
 
                             var plin = offset;
                             var pcol = offset + (8 * (int)file.count);
@@ -200,9 +217,11 @@ namespace WindowsPdbReader
                     {
                         while (offset < limit)
                         {
-                            ref readonly CV_FileCheckSum chk = ref InterpretStruct<CV_FileCheckSum>(in streamData, ref offset);
+                            ref readonly CV_FileCheckSum chk =
+                                ref InterpretStruct<CV_FileCheckSum>(in streamData, ref offset);
                             offset += chk.len;
-                            sourceFile = names[(int)chk.name]; // BUG: Is this really correct? Maybe it should be file.index?
+                            sourceFile =
+                                names[(int)chk.name]; // BUG: Is this really correct? Maybe it should be file.index?
                             Alignment(4, ref offset);
                         }
 
@@ -303,7 +322,8 @@ namespace WindowsPdbReader
             return result;
         }
 
-        private static IReadOnlyDictionary<string, int> LoadNameIndex(ReadOnlySpan<byte> bits, out int age, out Guid guid)
+        private static IReadOnlyDictionary<string, int> LoadNameIndex(ReadOnlySpan<byte> bits, out int age,
+            out Guid guid)
         {
             var offset = 0;
 
@@ -374,14 +394,15 @@ namespace WindowsPdbReader
             return (words[word] & (1u << (index % 32))) != 0;
         }
 
-        private static bool ReadPdbHeader(Stream stream, out int pageSize, out int freePageMap, out int pagesUsed, out int directorySize, out int zero)
+        private static bool ReadPdbHeader(Stream stream, out int pageSize, out int freePageMap, out int pagesUsed,
+            out int directorySize, out int zero)
         {
             ReadOnlySpan<byte> pdbMagic = new byte[]
             {
                 0x4D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x6F, 0x66, // "Microsof"
                 0x74, 0x20, 0x43, 0x2F, 0x43, 0x2B, 0x2B, 0x20, // "t C/C++ "
                 0x4D, 0x53, 0x46, 0x20, 0x37, 0x2E, 0x30, 0x30, // "MSF 7.00"
-                0x0D, 0x0A, 0x1A, 0x44, 0x53, 0x00, 0x00, 0x00,  // "^^^DS^^^"
+                0x0D, 0x0A, 0x1A, 0x44, 0x53, 0x00, 0x00, 0x00, // "^^^DS^^^"
             };
 
             Span<byte> fileMagic = stackalloc byte[32];
@@ -457,13 +478,15 @@ namespace WindowsPdbReader
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int InterpretInt32(ReadOnlySpan<byte> buffer, int offset)
         {
-            return (buffer[offset + 0] & 0xFF) | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) | (buffer[offset + 3] << 24);
+            return (buffer[offset + 0] & 0xFF) | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) |
+                   (buffer[offset + 3] << 24);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint InterpretUInt32(ReadOnlySpan<byte> buffer, ref int offset)
         {
-            var retval = (uint)((buffer[offset + 0] & 0xFF) | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) | (buffer[offset + 3] << 24));
+            var retval = (uint)((buffer[offset + 0] & 0xFF) | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) |
+                                (buffer[offset + 3] << 24));
             offset += 4;
             return retval;
         }
@@ -471,7 +494,8 @@ namespace WindowsPdbReader
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int InterpretInt32(ReadOnlySpan<byte> buffer, ref int offset)
         {
-            var retval = (buffer[offset + 0] & 0xFF) | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) | (buffer[offset + 3] << 24);
+            var retval = (buffer[offset + 0] & 0xFF) | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16) |
+                         (buffer[offset + 3] << 24);
             offset += 4;
             return retval;
         }
@@ -491,5 +515,4 @@ namespace WindowsPdbReader
             return retval;
         }
     }
-    
 }

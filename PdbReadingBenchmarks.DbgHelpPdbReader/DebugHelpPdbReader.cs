@@ -86,11 +86,12 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
             return info;
         }
 
-        public (int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromFileLine(string filePath, int lineNumber, int column)
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(
+            string filePath, int line, int column)
         {
             
      //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
-            return (default, default);
+            return (default, default,default);
         }
     }
 }

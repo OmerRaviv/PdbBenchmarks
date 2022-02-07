@@ -26,16 +26,32 @@ namespace PdbReadingBenchmarks.DnlibReader
             
             _module ??= ModuleDefMD.Load(_assemblyFullPath,
                 new ModuleCreationOptions { PdbOptions = PdbReaderOptions.MicrosoftComReader});
-            //
-            // _reader ??= (SymbolReader) _module.GetType()
-            //     .GetMethod("CreateSymbolReader", BindingFlags.NonPublic | BindingFlags.Instance)
-            //     .Invoke(_module, new object[]
-            //     {
-            //         new ModuleCreationOptions { PdbOptions = PdbReaderOptions.MicrosoftComReader }
-            //     });
+            
+            _reader ??= (SymbolReader) _module.GetType()
+                .GetMethod("CreateSymbolReader", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(_module, new object[]
+                {
+                    new ModuleCreationOptions { PdbOptions = PdbReaderOptions.MicrosoftComReader }
+                });
 
         }
 
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(
+            string filePath, int line, int column)
+        {
+            for (var i = 0; i < _reader.Documents.Count; i++)
+            {
+                if (_reader.Documents[i].URL == filePath)
+                {
+                    
+                }
+            }
+
+            //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
+            return (default, default,default);
+        }
+
+        
         public (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
         {
             MethodDef? methodDef = _module.ResolveMethod(MDToken.ToRID(methodMetadataToken));
@@ -58,8 +74,9 @@ namespace PdbReadingBenchmarks.DnlibReader
                 DocumentUrl = s.Document.Url,
                 StartLine = s.StartLine,
                 EndLine = s.EndLine,
-                StartColumn = s.StartLine,
+                StartColumn = s.StartColumn,
                 EndColumn = s.EndColumn,
+                
             }).ToList();
             return (sequencePoints, variables);
             //return (sequencePoints, variables);

@@ -12,7 +12,6 @@
     <Configuration>Release</Configuration>
     <IsPackable>false</IsPackable>
     <LangVersion>9</LangVersion>
-    
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
@@ -22,6 +21,7 @@
     <PackageReference Include="Microsoft.DiaSymReader.Native" Version="1.7.0" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="5.0.4" />
     <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="Verify.Xunit" Version="6.4.0" />
     
   </ItemGroup>
   <ItemGroup>

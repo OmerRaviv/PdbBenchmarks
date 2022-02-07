@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -21,32 +22,67 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
 
         public (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
         {
-            
             _symReader ??= CreateNativeSymReader();
             var symUnmanagedMethod = GetMethod(methodMetadataToken);
+     ////       var documents = symUnmanagedMethod.GetDocumentsForMethod();
+     ////       var urlBytes = new char[2000];
+     ////        documents.First().GetUrl(2000, out int count, urlBytes);
+      //       string url = new string(urlBytes, 0, count -1);
             return (GetSequencePoints(symUnmanagedMethod), GetLocalVariables(symUnmanagedMethod));
         }
+        public static class HResults
+        {
+            public static readonly int S_OK = 0;
+        }
 
-        private IList<Variable> GetLocalVariables(ISymUnmanagedMethod method)
+        public void CheckForError(int hresult, string nameOfOperation)
+        {
+            if (hresult != HResults.S_OK)
+            {
+                throw new ApplicationException($"{nameOfOperation} failed with HResult {hresult:X}");
+            }
+        }
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(string filePath, int line, int column)
+        {
+            _symReader ??= CreateNativeSymReader();
+            ISymUnmanagedDocument? document = _symReader.GetDocument(filePath);
+
+
+            CheckForError(_symReader.GetMethodFromDocumentPosition(document, line, column, out var method), "GetMethodFromDocumentPosition");
+            CheckForError(method.GetOffset(document, line, column, out int bytecodeOffset), "GetOffset");
+            CheckForError(method.GetToken(out int token), "GetToken");
+
+            var localVariablesInScope = GetLocalVariables(method,bytecodeOffset);
+            
+            return (token, bytecodeOffset,localVariablesInScope);
+
+        }
+        
+        private List<Variable> GetLocalVariables(ISymUnmanagedMethod method, int? bytecodeOffset = null)
         {
             var rootScope = method.GetRootScope();
             var childScopes = rootScope.GetChildren();
-            int childScopesCount = childScopes.Length;
-            var result = GetVariablesFromScope(childScopes.Single());
-
-            return result;
+            return GetVariablesFromScope(childScopes.Single(), bytecodeOffset);
 
         }
 
-        private static Variable[] GetVariablesFromScope(ISymUnmanagedScope rootScope)
+        private static List<Variable> GetVariablesFromScope(ISymUnmanagedScope rootScope, int? bytecodeOffset)
         {
             var locals = rootScope.GetLocals();
-            var result = new Variable[locals.Length];
+            var result = new List<Variable>(locals.Length);
             for (var index = 0; index < locals.Length; index++)
             {
                 var localVariable = locals[index];
                 string name = localVariable.GetName();
-                result[index] = new Variable(index, name);
+                
+                if (bytecodeOffset.HasValue &&
+                    (bytecodeOffset.Value > rootScope.GetEndOffset() ||
+                     bytecodeOffset.Value < rootScope.GetStartOffset()))
+                {
+                    continue; // Variable is not in scope
+                }
+                result.Add(new Variable(index, name));
+                
             }
 
             return result;
@@ -75,15 +111,18 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
             
             for (var i = 0; i < count; i++)
             {
+                
                 var sp = enumerator.Current;
+                
                 result[i] = new Contracts.SequencePoint()
                 {
+                    
                     Offset = sp.Offset,
                     StartColumn = sp.StartColumn,
                     EndColumn = sp.EndColumn,
                     StartLine = sp.StartLine,
                     EndLine = sp.EndLine,
-                    //DocumentUrl = sp.Document.GetUrl()
+                    DocumentUrl = GetUrl(sp.Document) 
                 };
                 
                 if (!enumerator.MoveNext())
@@ -97,6 +136,18 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
 
         }
 
+        private string GetUrl(ISymUnmanagedDocument doc)
+        {
+            if (doc is null) return null;
+            
+            CheckForError(doc.GetUrl(0, out int urlLength, null), "GetUrl");
+
+            // urlLength includes terminating '\0'
+            char[] urlBuffer = new char[urlLength];
+            CheckForError(doc.GetUrl(urlLength, out urlLength, urlBuffer), "GetUrl");
+
+            return new string(urlBuffer, 0, urlLength - 1);
+        }
         private ISymUnmanagedMethod GetMethod(int methodToken)
         {
             ISymUnmanagedMethod method;

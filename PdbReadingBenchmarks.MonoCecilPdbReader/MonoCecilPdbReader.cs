@@ -47,6 +47,12 @@ namespace PdbReadingBenchmarks
             }
         }
 
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(
+            string filePath, int line, int column)
+        {
+            throw new NotImplementedException();
+        }
+
         private static List<Variable> GetVariables(MethodDebugInformation debugInfo)
         {
             var variables = new List<Variable>();

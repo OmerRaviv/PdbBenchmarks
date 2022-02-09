@@ -86,7 +86,7 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
             return info;
         }
 
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(
             string filePath, int line, int column)
         {
             

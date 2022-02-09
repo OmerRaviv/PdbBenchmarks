@@ -24,30 +24,26 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         {
             _symReader ??= CreateNativeSymReader();
             var symUnmanagedMethod = GetMethod(methodMetadataToken);
-     ////       var documents = symUnmanagedMethod.GetDocumentsForMethod();
-     ////       var urlBytes = new char[2000];
-     ////        documents.First().GetUrl(2000, out int count, urlBytes);
-      //       string url = new string(urlBytes, 0, count -1);
             return (GetSequencePoints(symUnmanagedMethod), GetLocalVariables(symUnmanagedMethod));
         }
-        public static class HResults
+
+        private static class HResults
         {
             public static readonly int S_OK = 0;
         }
 
-        public void CheckForError(int hresult, string nameOfOperation)
+        private void CheckForError(int hresult, string nameOfOperation)
         {
             if (hresult != HResults.S_OK)
             {
                 throw new ApplicationException($"{nameOfOperation} failed with HResult {hresult:X}");
             }
         }
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(string filePath, int line, int column)
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(string filePath, int line, int column)
         {
             _symReader ??= CreateNativeSymReader();
             ISymUnmanagedDocument? document = _symReader.GetDocument(filePath);
-
-
+            
             CheckForError(_symReader.GetMethodFromDocumentPosition(document, line, column, out var method), "GetMethodFromDocumentPosition");
             CheckForError(method.GetOffset(document, line, column, out int bytecodeOffset), "GetOffset");
             CheckForError(method.GetToken(out int token), "GetToken");
@@ -106,24 +102,27 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
             
             Marshal.ThrowExceptionForHR(method.GetSequencePointCount(out int count));
             
-            var result = new SequencePoint[count];
+            var result = new List<SequencePoint>(count);
             var enumerator = sequencePoints.GetEnumerator();
             
             for (var i = 0; i < count; i++)
             {
                 
-                var sp = enumerator.Current;
+                SymUnmanagedSequencePoint sp = enumerator.Current;
                 
-                result[i] = new Contracts.SequencePoint()
+                var sequencePoint = new SequencePoint()
                 {
-                    
                     Offset = sp.Offset,
                     StartColumn = sp.StartColumn,
                     EndColumn = sp.EndColumn,
                     StartLine = sp.StartLine,
                     EndLine = sp.EndLine,
-                    DocumentUrl = GetUrl(sp.Document) 
+                    DocumentUrl = GetUrl(sp.Document)
                 };
+                if (!sp.IsHidden && !sp.IsEmpty()) 
+                {
+                    result.Add(sequencePoint);                    
+                }
                 
                 if (!enumerator.MoveNext())
                 {
@@ -180,5 +179,11 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         {
             ((ISymUnmanagedDispose) _symReader).Destroy();
         }
+    }
+    static class SymUnmanagedSequencePointExtensions
+    {
+        public static bool IsEmpty(this SymUnmanagedSequencePoint sp) =>
+            sp.EndColumn == 0 && sp.EndLine == 0 && sp.StartLine == 0 && sp.StartColumn == 0;
+
     }
 }

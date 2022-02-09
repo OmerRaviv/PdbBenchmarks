@@ -28,7 +28,7 @@ namespace WindowsPdbReader
             return (null, null);
         }
 
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocalsFromDocumentPosition(string filePath, int line,
+        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(string filePath, int line,
             int column)
         {
             throw new NotImplementedException();

@@ -8,6 +8,7 @@ using BenchmarkDotNet.Engines;
 using PdbReadingBenchmarks.Contracts;
 using PdbReadingBenchmarks.DbgHelpPdbReader;
 using PdbReadingBenchmarks.DiaNativeSymReader;
+using VerifyTests;
 using VerifyXunit;
 
 namespace PdbReadingBenchmarks
@@ -32,12 +33,13 @@ namespace PdbReadingBenchmarks
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DiaNativeSymReader }
             };
 
-        protected static Task VerifyResults<T>(T results)
+        protected static Task VerifyResults<T>(T results, PdbType pdbType)
         {
 #if DEBUG // Do not verify results if we're running a benchmark
             var verifySettings = new VerifySettings();
-            verifySettings.UseParameters("all-scenarios");
-            return VerifyXunit.Verifier.Verify(results, verifySettings);
+            verifySettings.UseParameters(pdbType, "all")
+                ;
+            return Verifier.Verify(results, verifySettings);
 #endif
             return Task.CompletedTask;
         }

@@ -16,7 +16,8 @@ namespace PdbReadingBenchmarks
             // Get all sequence points from method token                                (for CI Visibility - code coverage)
             // Get file/line number from (class name, method name)                      (for CI Visibility - get test definition source location)
 
-            BenchmarkRunner.Run(typeof(Program).Assembly);
+            BenchmarkRunner.Run(typeof(DebuggerLineProbes));
+            //BenchmarkRunner.Run(typeof(Program).Assembly);
             //    BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }

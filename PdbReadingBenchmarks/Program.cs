@@ -1,13 +1,10 @@
-using System;
 using BenchmarkDotNet.Running;
-using PdbReadingBenchmarks.DbgHelpPdbReader;
-using PdbReadingBenchmarks.DiaNativeSymReader;
 
 namespace PdbReadingBenchmarks
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             // Operations we will need to benchmark:
             // Get IL offset and locals from (file, line number)                        (for debugger line probe)

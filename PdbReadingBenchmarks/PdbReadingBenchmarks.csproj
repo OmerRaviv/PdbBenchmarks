@@ -25,14 +25,23 @@
     
   </ItemGroup>
   <ItemGroup>
-    
+
     <None Update="LargePdbSamples\WindowsPdb\nunit.framework.pdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="LargePdbSamples\WindowsPdb\nunit.framework.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    
+
+
+    <None Update="LargePdbSamples\PortablePdb\Newtonsoft.Json.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="LargePdbSamples\PortablePdb\Newtonsoft.Json.pdb">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+
+
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PdbReadingBenchmarks.DbgHelpPdbReader\PdbReadingBenchmarks.DbgHelpPdbReader.csproj" />

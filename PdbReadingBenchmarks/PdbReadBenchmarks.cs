@@ -14,8 +14,8 @@ namespace PdbReadingBenchmarks
         [Benchmark] [ArgumentsSource(nameof(LineProbeSupportedScenarios))]
         public Task GetILOffsetAndLocals_FromFileLine(PdbType pdbType, PdbReaderLibrary readerLibrary)
         {
-            var reader = CreateDebugInfoProvider(readerLibrary, PdbType.WindowsPdb);
-            var sampleData = SamplePdbQuery.GetSampleData(pdbType);
+            var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
+            var sampleData = SampleDataFactory.GetSampleData(pdbType);
             var result = reader.GetILOffsetAndLocals_FromDocumentPosition(
                 sampleData.SampleFilePath,
                 sampleData.Line,
@@ -37,7 +37,7 @@ namespace PdbReadingBenchmarks
         public Task GetFileLineNumber_FromMethodTokenAndBytecodeOffset(PdbType pdbType, PdbReaderLibrary readerLibrary)
         {
             var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
-            var sampleData = SamplePdbQuery.GetSampleData(pdbType);
+            var sampleData = SampleDataFactory.GetSampleData(pdbType);
             var methodToken = sampleData.GetSampleMethodToken();
             var result = reader.GetDebugInfo(methodToken);
 

@@ -21,7 +21,7 @@ namespace PdbReadingBenchmarks
         [GlobalSetup]
         public void Setup()
         {
-            Assembly.LoadFrom(SamplePdbQuery.GetSampleData(PdbType.WindowsPdb).AssemblyFullPath);
+            Assembly.LoadFrom(SampleDataFactory.GetSampleData(PdbType.WindowsPdb).AssemblyFullPath);
         }
 
         public static IEnumerable<object[]> AllScenarios =>
@@ -30,7 +30,9 @@ namespace PdbReadingBenchmarks
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.Dnlib },
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DbgHelp },
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.MonoCecil },
-                new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DiaNativeSymReader }
+                new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DiaNativeSymReader },
+                new object[] { PdbType.PortablePdb, PdbReaderLibrary.Dnlib},
+                //new object[] { PdbType.PortablePdb, PdbReaderLibrary.DiaNativeSymReader },
             };
 
         protected static Task VerifyResults<T>(T results, PdbType pdbType)
@@ -46,7 +48,7 @@ namespace PdbReadingBenchmarks
 
         protected IDebugInfoProvider CreateDebugInfoProvider(PdbReaderLibrary readerLibrary, PdbType pdbType)
         {
-            var sample = SamplePdbQuery.GetSampleData(pdbType);
+            var sample = SampleDataFactory.GetSampleData(pdbType);
             return readerLibrary switch
             {
                 PdbReaderLibrary.DbgHelp => new DebugHelpPdbReader(sample.AssemblyFullPath),

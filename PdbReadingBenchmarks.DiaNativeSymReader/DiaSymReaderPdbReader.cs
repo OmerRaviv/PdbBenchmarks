@@ -92,7 +92,7 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         [DllImport("Microsoft.DiaSymReader.Native.amd64.dll", EntryPoint = "CreateSymReader")]
         private extern static void CreateSymReader64(ref Guid id, [MarshalAs(UnmanagedType.IUnknown)]out object symReader);
 
-        private static ISymUnmanagedReader3 _symReader;
+        private ISymUnmanagedReader3 _symReader;
 
 
         private IList<SequencePoint> GetSequencePoints(ISymUnmanagedMethod method)

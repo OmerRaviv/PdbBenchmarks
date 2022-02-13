@@ -12,12 +12,12 @@ using SequencePoint = PdbReadingBenchmarks.Contracts.SequencePoint;
 namespace PdbReadingBenchmarks.DnlibReader
 {
 
-    public class DnlibPdbReader : PdbReadingBenchmarks.Contracts.IDebugInfoProvider
+    public class DnlibPdbReader : IDebugInfoProvider
     {
         private readonly string _assemblyFullPath;
         private readonly string _pdbFullPath;
-        private static ModuleDefMD _module;
-        private static SymbolReader _reader;
+        private  ModuleDefMD _module;
+        private  SymbolReader _reader;
 
 
         public DnlibPdbReader(string assemblyFullPath, string pdbFullPath)
@@ -35,13 +35,14 @@ namespace PdbReadingBenchmarks.DnlibReader
                 {
                     new ModuleCreationOptions { PdbOptions = PdbReaderOptions.MicrosoftComReader }
                 });
+            _methodExtentsByDocument = new(CalculateMethodExtentsByDocument);
+            _reader.Initialize(_module);
 
         }
 
-        private Lazy<Dictionary<string, List<MethodLineExtent>>> _methodExtentsByDocument = 
-            new(CalculateMethodExtentsByDocument);
+        private Lazy<Dictionary<string, List<MethodLineExtent>>> _methodExtentsByDocument;
 
-        private static Dictionary<string, List<MethodLineExtent>> CalculateMethodExtentsByDocument()
+        private Dictionary<string, List<MethodLineExtent>> CalculateMethodExtentsByDocument()
         {
             Dictionary<string, List<MethodLineExtent>> methodExtentsByDocument = new();
             foreach (var types in _module.Types)

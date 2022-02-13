@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
@@ -16,37 +15,6 @@ namespace PdbReadingBenchmarks
 {
     public class SamplePdbQuery
     {
-        public static SamplePdbQuery GetSampleData(PdbType pdbType)
-        {
-            return pdbType switch
-            {
-                PdbType.WindowsPdb => GetWindowsPdbSample(),
-                PdbType.PortablePdb => GetPortablePdbSample(),
-                _ => throw new ArgumentOutOfRangeException(nameof(pdbType))
-            };
-        }
-
-        private static SamplePdbQuery GetPortablePdbSample()
-        {
-            throw new NotImplementedException();
-        }
-
-        private static SamplePdbQuery GetWindowsPdbSample()
-        {
-            var assemblyFullPath = Path.Combine(Environment.CurrentDirectory, "LargePdbSamples", "WindowsPdb",
-                "nunit.framework.dll");
-            return new SamplePdbQuery()
-            {
-                AssemblyFullPath = assemblyFullPath,
-                PdbFilePath = Path.ChangeExtension(assemblyFullPath, "pdb"),
-                SampleFilePath = @"C:\src\nunit\nunit\src\NUnitFramework\framework\Api\FrameworkController.cs",
-                Line = 233,
-                Column = 17,
-                ClassName = "NUnit.Framework.Api.FrameworkController",
-                MethodName = "RunTests",
-            };
-        }
-
         public string ClassName { get; init; }
 
         public string MethodName { get; init; }

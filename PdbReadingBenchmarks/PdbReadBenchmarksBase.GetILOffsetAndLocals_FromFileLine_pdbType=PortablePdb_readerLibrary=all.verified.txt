@@ -1,0 +1,10 @@
+{
+  MethodToken: 100663545,
+  ILOffset: 155,
+  Locals: [
+    {
+      Index: 1,
+      Name: 'g2'
+    }
+  ]
+}

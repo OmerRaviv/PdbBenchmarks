@@ -24,7 +24,7 @@ namespace PdbReadingBenchmarks
             _pdbFullPath = pdbFullPath;
         }
 
-        public unsafe (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(
+        public unsafe MethodDebugInfo GetDebugInfo(
             int methodMetadataToken)
         {
             using Stream fileStream = File.OpenRead(_assemblyFullPath);
@@ -43,11 +43,11 @@ namespace PdbReadingBenchmarks
                     throw new InvalidOperationException("Obtaining debug information failed");
                 var sequencePoints = GetSequencePoints(debugInformation);
                 var variables = GetVariables(debugInformation);
-                return (sequencePoints, variables);
+                return new MethodDebugInfo(sequencePoints, variables);
             }
         }
 
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(
+        public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
             string filePath, int line, int column)
         {
             throw new NotImplementedException();

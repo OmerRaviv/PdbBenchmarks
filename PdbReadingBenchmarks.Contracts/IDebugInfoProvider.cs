@@ -2,10 +2,14 @@ using System.Collections.Generic;
 
 namespace PdbReadingBenchmarks.Contracts
 {
+    
+    public record MethodDebugInfo(IList<SequencePoint> SequencePoints, IList<Variable> Variables);
+
+    public record LineDebugInfo(int MethodToken, int ILOffset, List<Variable> Locals); 
+    
     public interface IDebugInfoProvider
     {
-        unsafe (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken);
-        (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(string filePath,
-            int line, int column);
+       MethodDebugInfo GetDebugInfo(int methodMetadataToken);
+       LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(string filePath, int line, int column);
     }
 }

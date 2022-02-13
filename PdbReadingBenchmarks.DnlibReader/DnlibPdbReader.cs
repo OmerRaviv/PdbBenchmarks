@@ -76,12 +76,12 @@ namespace PdbReadingBenchmarks.DnlibReader
 
         }
 
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(
+        public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
             string filePath, int line, int column)
         {
             if (!_methodExtentsByDocument.Value.TryGetValue(filePath, out var methodExtentsInDoc))
             {
-                return (default, default, default);
+                return new LineDebugInfo(default, default, default);
             }
 
             foreach (var methodLineExtent in methodExtentsInDoc)
@@ -97,16 +97,17 @@ namespace PdbReadingBenchmarks.DnlibReader
                             sp.Column >= column &&
                             sp.EndColumn >= column)
                         {
-                            return (methodToken: (int)method.MDToken.Raw, 
-                                    ilOffset:    sp.Offset,
-                                    locals:      GetVariablesInScope(symbolMethod, sp.Offset));
+                            return new LineDebugInfo(
+                                    MethodToken: (int)method.MDToken.Raw, 
+                                    ILOffset: sp.Offset,
+                                    Locals: GetVariablesInScope(symbolMethod, sp.Offset));
                         }
                     }
 
                     
                 }
             }
-            return (default, default, default);
+            return new LineDebugInfo(default, default, default);
 
             //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
         }
@@ -123,7 +124,7 @@ namespace PdbReadingBenchmarks.DnlibReader
         }
 
 
-        public (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
+        public MethodDebugInfo GetDebugInfo(int methodMetadataToken)
         {
             MethodDef? methodDef = _module.ResolveMethod(MDToken.ToRID(methodMetadataToken));
             // SymbolMethod method = _reader.GetMethod(methodDef, 1);
@@ -154,7 +155,7 @@ namespace PdbReadingBenchmarks.DnlibReader
                 Offset = (int)s.Min(i => i.Offset)
                 
             }).ToList();
-            return (sequencePoints, variables);
+            return new MethodDebugInfo(sequencePoints, variables);
             //return (sequencePoints, variables);
         }
     }

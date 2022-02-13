@@ -20,15 +20,15 @@ namespace WindowsPdbReader
             _pdbFullPath = pdbFullPath;
         }
 
-        public (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
+        public MethodDebugInfo GetDebugInfo(int methodMetadataToken)
         {
             var pdbStream = File.OpenRead(_pdbFullPath);
             var ff = GetSourceLineInfo(pdbStream, (uint)methodMetadataToken, 0, out int age, out Guid guid,
                 out string sourceFile, out int sourceLine, out int sourceColumn);
-            return (null, null);
+            return new MethodDebugInfo(null, null);
         }
 
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(string filePath, int line,
+        public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(string filePath, int line,
             int column)
         {
             throw new NotImplementedException();

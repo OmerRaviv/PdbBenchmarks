@@ -3,8 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Reflection;
 using PdbReadingBenchmarks.Contracts;
 using Vanara.PInvoke;
 using Zodiacon.DebugHelp;
@@ -25,7 +23,7 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
         {
             _assemblyFullPath = assemblyFullPath;
         }
-        public unsafe (IList<SequencePoint> sequencePoints, IList<Variable> variables) GetDebugInfo(int methodMetadataToken)
+        public unsafe MethodDebugInfo GetDebugInfo(int methodMetadataToken)
         {
             
             using var currentProcess = Process.GetCurrentProcess();
@@ -64,7 +62,7 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
 
             
             var sequencePoints = new List<SequencePoint>();
-            return (sequencePoints,variables);
+            return new MethodDebugInfo(sequencePoints,variables);
         }
 
         private bool EnumParamsCallback(in SYMBOL_INFO psyminfo, uint symbolsize, IntPtr usercontext)
@@ -86,12 +84,12 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
             return info;
         }
 
-        public (int methodToken, int ilOffset, List<Variable> locals) GetILOffsetAndLocals_FromDocumentPosition(
+        public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
             string filePath, int line, int column)
         {
             
      //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
-            return (default, default,default);
+            return new LineDebugInfo(default, default,default);
         }
     }
 }

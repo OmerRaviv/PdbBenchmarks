@@ -39,8 +39,7 @@ namespace PdbReadingBenchmarks
         {
 #if DEBUG // Do not verify results if we're running a benchmark
             var verifySettings = new VerifySettings();
-            verifySettings.UseParameters(pdbType, "all")
-                ;
+            verifySettings.UseParameters(pdbType, "all");
             return Verifier.Verify(results, verifySettings);
 #endif
             return Task.CompletedTask;
@@ -52,7 +51,7 @@ namespace PdbReadingBenchmarks
             return readerLibrary switch
             {
                 PdbReaderLibrary.DbgHelp => new DebugHelpPdbReader(sample.AssemblyFullPath),
-                PdbReaderLibrary.DiaNativeSymReader => new DiaSymReaderPdbReader(sample.PdbFilePath),
+                PdbReaderLibrary.DiaNativeSymReader => new DiaSymReaderPdbReader(sample.PdbFilePath, sample.AssemblyFullPath),
                 PdbReaderLibrary.MonoCecil => new MonoCecilPdbReader(sample.AssemblyFullPath, sample.PdbFilePath),
                 PdbReaderLibrary.Dnlib => new DnlibReader.DnlibPdbReader(sample.AssemblyFullPath, sample.PdbFilePath),
                 _ => throw new ArgumentOutOfRangeException(nameof(readerLibrary), readerLibrary, null)

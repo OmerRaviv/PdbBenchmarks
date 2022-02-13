@@ -1,0 +1,48 @@
+{
+  SequencePoints: [
+    {
+      StartLine: 229,
+      StartColumn: 13,
+      EndLine: 229,
+      EndColumn: 111,
+      DocumentUrl: 'C:\src\nunit\nunit\src\NUnitFramework\framework\Api\FrameworkController.cs'
+    },
+    {
+      Offset: 30,
+      StartLine: 232,
+      StartColumn: 13,
+      EndLine: 232,
+      EndColumn: 34,
+      DocumentUrl: 'C:\src\nunit\nunit\src\NUnitFramework\framework\Api\FrameworkController.cs'
+    },
+    {
+      Offset: 38,
+      StartLine: 233,
+      StartColumn: 17,
+      EndLine: 233,
+      EndColumn: 57,
+      DocumentUrl: 'C:\src\nunit\nunit\src\NUnitFramework\framework\Api\FrameworkController.cs'
+    },
+    {
+      Offset: 51,
+      StartLine: 234,
+      StartColumn: 13,
+      EndLine: 234,
+      EndColumn: 46,
+      DocumentUrl: 'C:\src\nunit\nunit\src\NUnitFramework\framework\Api\FrameworkController.cs'
+    },
+    {
+      Offset: 58,
+      StartLine: 236,
+      StartColumn: 13,
+      EndLine: 236,
+      EndColumn: 36,
+      DocumentUrl: 'C:\src\nunit\nunit\src\NUnitFramework\framework\Api\FrameworkController.cs'
+    }
+  ],
+  Variables: [
+    {
+      Name: 'result'
+    }
+  ]
+}

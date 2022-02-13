@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.DiaSymReader;
-using PdbReadingBenchmarks.Contracts;
 
 namespace PdbReadingBenchmarks.DiaNativeSymReader
 {

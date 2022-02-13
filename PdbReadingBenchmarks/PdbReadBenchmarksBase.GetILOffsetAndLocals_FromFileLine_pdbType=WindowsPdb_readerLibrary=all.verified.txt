@@ -1,0 +1,9 @@
+{
+  MethodToken: 100666261,
+  ILOffset: 38,
+  Locals: [
+    {
+      Name: 'result'
+    }
+  ]
+}

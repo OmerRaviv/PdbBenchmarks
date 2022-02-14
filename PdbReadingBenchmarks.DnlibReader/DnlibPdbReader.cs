@@ -28,56 +28,71 @@ namespace PdbReadingBenchmarks.DnlibReader
         {
             _assemblyFullPath = assemblyFullPath;
             _pdbFullPath = pdbFullPath;
-            
-            
-            _module ??= ModuleDefMD.Load(_assemblyFullPath,
-                new ModuleCreationOptions { PdbOptions = PdbReaderOptions.MicrosoftComReader});
-            
-            _reader ??= (SymbolReader) _module.GetType()
-                .GetMethod("CreateSymbolReader", BindingFlags.NonPublic | BindingFlags.Instance)
-                .Invoke(_module, new object[]
-                {
-                    new ModuleCreationOptions { PdbOptions = PdbReaderOptions.MicrosoftComReader }
-                });
-            _methodExtentsByDocument = new(CalculateMethodExtentsByDocument);
+            _module = ModuleDefMD.Load(File.OpenRead(_assemblyFullPath));
+            _reader = CreateSymbolReader(new ModuleCreationOptions(CLRRuntimeReaderKind.CLR));
             _reader.Initialize(_module);
         }
+        
+        SymbolReader CreateSymbolReader(ModuleCreationOptions options)
+        {
+	        var metadata = MetadataFactory.Load(_assemblyFullPath, CLRRuntimeReaderKind.CLR);
+	        if (options.PdbFileOrData is not null) {
+		        var pdbFileName = options.PdbFileOrData as string;
+		        if (!string.IsNullOrEmpty(pdbFileName)) {
+			        var symReader = SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbFileName);
+			        if (symReader is not null)
+				        return symReader;
+		        }
+
+		        if (options.PdbFileOrData is byte[] pdbData)
+			        return SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbData);
+
+		        if (options.PdbFileOrData is DataReaderFactory pdbStream)
+			        return SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbStream);
+	        }
+
+	        if (options.TryToLoadPdbFromDisk)
+		        return SymbolReaderFactory.CreateFromAssemblyFile(options.PdbOptions, metadata, _assemblyFullPath);
+
+	        return null;
+        }
+
 
         private Lazy<Dictionary<string, List<MethodLineExtent>>> _methodExtentsByDocument;
 
-        private Dictionary<string, List<MethodLineExtent>> CalculateMethodExtentsByDocument()
-        {
-            Dictionary<string, List<MethodLineExtent>> methodExtentsByDocument = new();
-            foreach (var types in _module.Types)
-            {
-                foreach (MethodDef method in types.Methods)
-                {
-                    var symbolMethod = _reader.GetMethod(method, 1);
-                    int minLine = int.MaxValue, maxLine = int.MinValue;
-
-                    
-                    string document = null;
-                    foreach (var sp in symbolMethod.SequencePoints)
-                    {
-                        document ??= sp.Document.URL;
-                        
-                        if (sp.Line < minLine) minLine = sp.Line;
-                        if (sp.EndLine > maxLine) maxLine = sp.EndLine;
-                    }
-
-                    if (document == null) continue;
-                    if (!methodExtentsByDocument.TryGetValue(document, out var methodExtentsInDoc))
-                    {
-                        methodExtentsByDocument[document] = methodExtentsInDoc = new List<MethodLineExtent>();
-                    }
-                    
-                    methodExtentsInDoc.Add(new MethodLineExtent(method.Rid,1, minLine, maxLine));
-                }
-            }
-
-            return methodExtentsByDocument;
-
-        }
+        // private Dictionary<string, List<MethodLineExtent>> CalculateMethodExtentsByDocument()
+        // {
+        //     Dictionary<string, List<MethodLineExtent>> methodExtentsByDocument = new();
+        //     foreach (var types in _module.Types)
+        //     {
+        //         foreach (MethodDef method in types.Methods)
+        //         {
+        //             var symbolMethod = _reader.GetMethod(method, 1);
+        //             int minLine = int.MaxValue, maxLine = int.MinValue;
+        //
+        //             
+        //             string document = null;
+        //             foreach (var sp in symbolMethod.SequencePoints)
+        //             {
+        //                 document ??= sp.Document.URL;
+        //                 
+        //                 if (sp.Line < minLine) minLine = sp.Line;
+        //                 if (sp.EndLine > maxLine) maxLine = sp.EndLine;
+        //             }
+        //
+        //             if (document == null) continue;
+        //             if (!methodExtentsByDocument.TryGetValue(document, out var methodExtentsInDoc))
+        //             {
+        //                 methodExtentsByDocument[document] = methodExtentsInDoc = new List<MethodLineExtent>();
+        //             }
+        //             
+        //             methodExtentsInDoc.Add(new MethodLineExtent(method.Rid,1, minLine, maxLine));
+        //         }
+        //     }
+        //
+        //     return methodExtentsByDocument;
+        //
+        // }
 
         private int GetDocumentRid(Metadata pdbMetadata, string documentUrl)
         {

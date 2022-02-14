@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using dnlib.DotNet;
+using dnlib.DotNet.MD;
 using dnlib.DotNet.Pdb;
 using dnlib.DotNet.Pdb.Symbols;
+using dnlib.IO;
 using PdbReadingBenchmarks.Contracts;
 using SequencePoint = PdbReadingBenchmarks.Contracts.SequencePoint;
 
@@ -16,8 +20,8 @@ namespace PdbReadingBenchmarks.DnlibReader
     {
         private readonly string _assemblyFullPath;
         private readonly string _pdbFullPath;
-        private  ModuleDefMD _module;
-        private  SymbolReader _reader;
+        private readonly ModuleDefMD _module;
+        private readonly SymbolReader _reader;
 
 
         public DnlibPdbReader(string assemblyFullPath, string pdbFullPath)
@@ -37,7 +41,6 @@ namespace PdbReadingBenchmarks.DnlibReader
                 });
             _methodExtentsByDocument = new(CalculateMethodExtentsByDocument);
             _reader.Initialize(_module);
-
         }
 
         private Lazy<Dictionary<string, List<MethodLineExtent>>> _methodExtentsByDocument;
@@ -49,15 +52,15 @@ namespace PdbReadingBenchmarks.DnlibReader
             {
                 foreach (MethodDef method in types.Methods)
                 {
-                    if (!method.HasBody || !method.Body.HasPdbMethod) continue;
-                    var methodScope = method.Body.PdbMethod.Scope;
                     var symbolMethod = _reader.GetMethod(method, 1);
                     int minLine = int.MaxValue, maxLine = int.MinValue;
 
+                    
                     string document = null;
                     foreach (var sp in symbolMethod.SequencePoints)
                     {
                         document ??= sp.Document.URL;
+                        
                         if (sp.Line < minLine) minLine = sp.Line;
                         if (sp.EndLine > maxLine) maxLine = sp.EndLine;
                     }
@@ -76,51 +79,141 @@ namespace PdbReadingBenchmarks.DnlibReader
 
         }
 
+        private int GetDocumentRid(Metadata pdbMetadata, string documentUrl)
+        {
+            
+            var docTbl = pdbMetadata.TablesStream.DocumentTable;
+            var docs = new SymbolDocument[docTbl.Rows];
+            var nameReader = new DocumentNameReader(pdbMetadata.BlobStream);
+            for (int i = 0; i < docs.Length; i++)
+            {
+                if (!pdbMetadata.TablesStream.TryReadDocumentRow((uint)i + 1, out var row)) continue;
+                
+                var url = nameReader.ReadDocumentName(row.Name);
+
+             
+                if (url == documentUrl) return i + 1;
+            }
+
+            return -1;
+        }
+
+        private IEnumerable<uint> GetMethodsContainedInDocument(string documentUrl)
+        {
+            Metadata pdbMetadata = (Metadata)_reader.GetType().GetField("pdbMetadata", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(_reader);
+            int requestedDocumentRid = GetDocumentRid(pdbMetadata, documentUrl);
+            
+            for (uint methodRid = 0; methodRid < pdbMetadata.TablesStream.MethodDebugInformationTable.Rows; methodRid++)
+            {
+                if (!pdbMetadata.TablesStream.TryReadMethodDebugInformationRow(methodRid, out var row))
+                    continue;
+
+                if (row.SequencePoints == 0)
+                    continue;
+
+
+                if (row.Document == requestedDocumentRid)
+                {
+                    yield return methodRid;
+                }
+            }
+        }
+
+        public class FakeMethodDef : MethodDef
+        {
+            public FakeMethodDef(uint rid)
+            {
+                this.rid = rid;
+            }
+        }
         public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
             string filePath, int line, int column)
         {
-            if (!_methodExtentsByDocument.Value.TryGetValue(filePath, out var methodExtentsInDoc))
+            foreach (var methodRid in GetMethodsContainedInDocument(filePath))
             {
-                return new LineDebugInfo(default, default, default);
-            }
-
-            foreach (var methodLineExtent in methodExtentsInDoc)
-            {
-                if (line > methodLineExtent.MinLine && line < methodLineExtent.MaxLine)
+                //var method = _module.ResolveMethod((uint)methodRid);
+                var method = new FakeMethodDef(methodRid);
+                var symbolMethod = _reader.GetMethod(method, 1);
+                foreach (var sp in symbolMethod.SequencePoints)
                 {
-                    var method = _module.ResolveMethod(methodLineExtent.Method);
-                    var symbolMethod = _reader.GetMethod(method, 1);
-                    foreach (var sp in symbolMethod.SequencePoints)
+                    if (sp.Line <= line &&
+                        sp.EndLine >= line &&
+                        sp.Column >= column &&
+                        sp.EndColumn >= column)
                     {
-                        if (sp.Line <= line &&
-                            sp.EndLine >= line &&
-                            sp.Column >= column &&
-                            sp.EndColumn >= column)
-                        {
-                            return new LineDebugInfo(
-                                    MethodToken: (int)method.MDToken.Raw, 
-                                    ILOffset: sp.Offset,
-                                    Locals: GetVariablesInScope(symbolMethod, sp.Offset));
-                        }
+                        return new LineDebugInfo(
+                            MethodToken: (int)method.MDToken.Raw,
+                            ILOffset: sp.Offset,
+                            Locals: GetVariablesInScope(symbolMethod, sp.Offset));
                     }
-
-                    
                 }
             }
             return new LineDebugInfo(default, default, default);
 
             //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
         }
+        // public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
+        //     string filePath, int line, int column)
+        // {
+        //     
+        //     if (!_methodExtentsByDocument.Value.TryGetValue(filePath, out var methodExtentsInDoc))
+        //     {
+        //         return new LineDebugInfo(default, default, default);
+        //     }
+        //
+        //     foreach (var methodLineExtent in methodExtentsInDoc)
+        //     {
+        //         if (line > methodLineExtent.MinLine && line < methodLineExtent.MaxLine)
+        //         {
+        //             var method = _module.ResolveMethod(methodLineExtent.Method);
+        //             var symbolMethod = _reader.GetMethod(method, 1);
+        //             foreach (var sp in symbolMethod.SequencePoints)
+        //             {
+        //                 if (sp.Line <= line &&
+        //                     sp.EndLine >= line &&
+        //                     sp.Column >= column &&
+        //                     sp.EndColumn >= column)
+        //                 {
+        //                     return new LineDebugInfo(
+        //                         MethodToken: (int)method.MDToken.Raw, 
+        //                         ILOffset: sp.Offset,
+        //                         Locals: GetVariablesInScope(symbolMethod, sp.Offset));
+        //                 }
+        //             }
+        //
+        //             
+        //         }
+        //     }
+        //     return new LineDebugInfo(default, default, default);
+        //
+        //     //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
+        // }
 
         private List<Variable> GetVariablesInScope(SymbolMethod method, int offset)
         {
-            var smallestContainingScope = method.RootScope.Children
-                .FirstOrDefault(s => s.StartOffset <= offset && 
-                                               s.EndOffset >= offset) ??
-                                          method.RootScope;
-            
-            return new List<Variable>(smallestContainingScope.Locals.Select(v => 
-                new Variable(v.Index, v.Name)));
+            return
+                GetAllScopes(method)
+                    .Where(s => s.StartOffset <= offset && s.EndOffset >= offset)
+                    .SelectMany(s => s.Locals.Select(v => new Variable(v.Index, v.Name)))
+                    .ToList();
+        }
+
+        private static IList<SymbolScope> GetAllScopes(SymbolMethod method)
+        {
+            var result = new List<SymbolScope>();
+            RetrieveAllNestedScopes(method.RootScope, result);
+            return result;
+        }
+
+        private static void RetrieveAllNestedScopes(SymbolScope scope, List<SymbolScope> result)
+        {
+            // Recursively extract all nested scopes in method
+            if (scope == null) return;
+            result.Add(scope);
+            foreach (var innerScope in scope.Children)
+            {
+                RetrieveAllNestedScopes(innerScope,result);
+            }
         }
 
 
@@ -252,5 +345,95 @@ namespace PdbReadingBenchmarks.DnlibReader
         private string GetDebuggerDisplay() =>
             $"{Method} v{Version} [{MinLine}-{MaxLine}]";
     }
+
+    	struct DocumentNameReader {
+		const int MAX_NAME_LENGTH = 64 * 1024;
+		readonly Dictionary<uint, string> docNamePartDict;
+		readonly BlobStream blobStream;
+		readonly StringBuilder sb;
+
+		char[] prevSepChars;
+		int prevSepCharsLength;
+		byte[] prevSepCharBytes;
+		int prevSepCharBytesCount;
+
+		public DocumentNameReader(BlobStream blobStream) {
+			docNamePartDict = new Dictionary<uint, string>();
+			this.blobStream = blobStream;
+			sb = new StringBuilder();
+
+			prevSepChars = new char[2];
+			prevSepCharsLength = 0;
+			prevSepCharBytes = new byte[3];
+			prevSepCharBytesCount = 0;
+		}
+
+		public string ReadDocumentName(uint offset) {
+			sb.Length = 0;
+			if (!blobStream.TryCreateReader(offset, out var reader))
+				return string.Empty;
+			var sepChars = ReadSeparatorChar(ref reader, out int sepCharsLength);
+			bool needSep = false;
+			while (reader.Position < reader.Length) {
+				if (needSep)
+					sb.Append(sepChars, 0, sepCharsLength);
+				needSep = !(sepCharsLength == 1 && sepChars[0] == '\0');
+				var part = ReadDocumentNamePart(reader.ReadCompressedUInt32());
+				sb.Append(part);
+				if (sb.Length > MAX_NAME_LENGTH) {
+					sb.Length = MAX_NAME_LENGTH;
+					break;
+				}
+			}
+			return sb.ToString();
+		}
+
+		string ReadDocumentNamePart(uint offset) {
+			if (docNamePartDict.TryGetValue(offset, out var name))
+				return name;
+			if (!blobStream.TryCreateReader(offset, out var reader))
+				return string.Empty;
+			name = reader.ReadUtf8String((int)reader.BytesLeft);
+			docNamePartDict.Add(offset, name);
+			return name;
+		}
+
+		char[] ReadSeparatorChar(ref DataReader reader, out int charLength) {
+			if (prevSepCharBytesCount != 0 && prevSepCharBytesCount <= reader.Length) {
+				var pos = reader.Position;
+				bool ok = true;
+				for (int i = 0; i < prevSepCharBytesCount; i++) {
+					if (i >= prevSepCharBytes.Length || reader.ReadByte() != prevSepCharBytes[i]) {
+						ok = false;
+						break;
+					}
+				}
+				if (ok) {
+					charLength = prevSepCharsLength;
+					return prevSepChars;
+				}
+				reader.Position = pos;
+			}
+
+			var decoder = Encoding.UTF8.GetDecoder();
+			var bytes = new byte[1];
+			prevSepCharBytesCount = 0;
+			for (int i = 0; ; i++) {
+				byte b = reader.ReadByte();
+				prevSepCharBytesCount++;
+				if (i == 0 && b == 0)
+					break;
+				if (i < prevSepCharBytes.Length)
+					prevSepCharBytes[i] = b;
+				bytes[0] = b;
+				bool isLastByte = reader.Position + 1 == reader.Length;
+				decoder.Convert(bytes, 0, 1, prevSepChars, 0, prevSepChars.Length, isLastByte, out int bytesUsed, out prevSepCharsLength, out bool completed);
+				if (prevSepCharsLength > 0)
+					break;
+			}
+			charLength = prevSepCharsLength;
+			return prevSepChars;
+		}
+	}
 
 }

@@ -31,8 +31,9 @@ namespace PdbReadingBenchmarks
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DbgHelp },
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.MonoCecil },
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DiaNativeSymReader },
+                
                 new object[] { PdbType.PortablePdb, PdbReaderLibrary.Dnlib},
-                //new object[] { PdbType.PortablePdb, PdbReaderLibrary.DiaNativeSymReader },
+                new object[] { PdbType.PortablePdb, PdbReaderLibrary.DiaNativeSymReader },
             };
 
         protected static Task VerifyResults<T>(T results, PdbType pdbType)

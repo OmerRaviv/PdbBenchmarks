@@ -3,8 +3,19 @@
   ILOffset: 155,
   Locals: [
     {
+      Name: 't'
+    },
+    {
       Index: 1,
       Name: 'g2'
+    },
+    {
+      Index: 3,
+      Name: 's'
+    },
+    {
+      Index: 4,
+      Name: 'data'
     }
   ]
 }

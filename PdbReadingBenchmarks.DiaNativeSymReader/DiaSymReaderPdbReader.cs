@@ -56,34 +56,40 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         
         private List<Variable> GetLocalVariables(ISymUnmanagedMethod method, int? bytecodeOffset = null)
         {
-            var rootScope = method.GetRootScope();
-            var childScopes = rootScope.GetChildren();
-            return GetVariablesFromScope(childScopes.Single(), bytecodeOffset);
+            return GetScopes(method, bytecodeOffset).SelectMany(s => s.GetLocals()
+                .Select(l => new Variable(0, l.GetName()))).ToList();
+        }
+        
+        void RetrieveScopes(ISymUnmanagedScope scope, int? bytecodeOffset, List<ISymUnmanagedScope> result)
+        {
+            if (scope == null) return;
+            if (bytecodeOffset.HasValue &&
+                (bytecodeOffset.Value > scope.GetEndOffset() ||
+                 bytecodeOffset.Value < scope.GetStartOffset()))
+            {
+                return;
+            }
+            
+            result.Add(scope);
 
+            foreach (var nestedScope in scope.GetChildren())
+            {
+                RetrieveScopes(nestedScope, bytecodeOffset, result);
+            }
         }
 
-        private static List<Variable> GetVariablesFromScope(ISymUnmanagedScope rootScope, int? bytecodeOffset)
-        {
-            var locals = rootScope.GetLocals();
-            var result = new List<Variable>(locals.Length);
-            for (var index = 0; index < locals.Length; index++)
-            {
-                var localVariable = locals[index];
-                string name = localVariable.GetName();
-                
-                if (bytecodeOffset.HasValue &&
-                    (bytecodeOffset.Value > rootScope.GetEndOffset() ||
-                     bytecodeOffset.Value < rootScope.GetStartOffset()))
-                {
-                    continue; // Variable is not in scope
-                }
-                result.Add(new Variable(index, name));
-                
-            }
 
+        List<ISymUnmanagedScope> GetScopes(ISymUnmanagedMethod method, int? bytescodeOffset)
+        {
+        
+            var result = new List<ISymUnmanagedScope>();
+            RetrieveScopes(method.GetRootScope(), bytescodeOffset, result);
             return result;
         }
 
+
+
+        
         [DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory)]
         [DllImport("Microsoft.DiaSymReader.Native.x86.dll", EntryPoint = "CreateSymReader")]
         private extern static void CreateSymReader32(ref Guid id, [MarshalAs(UnmanagedType.IUnknown)]out object symReader);
@@ -107,7 +113,7 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
             while (enumerator.MoveNext())
             {
                 SymUnmanagedSequencePoint sp = enumerator.Current;
-                if (!sp.IsHidden && !sp.IsEmpty()) continue;
+                if (sp.IsHidden || sp.IsEmpty()) continue;
 
                 result.Add(new SequencePoint()
                     {
@@ -144,27 +150,47 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         }
 
 
-
-        private  ISymUnmanagedReader3 CreateNativeSymReader()
+        private ISymUnmanagedReader5 CreateNativeSymReader()
         {
             var pdbStream = File.OpenRead(_pdbFullPath);
+            var peStream = File.OpenRead(_assemblyFullPath);
             pdbStream.Position = 0;
-        
-            object symReader = null;
-            var guid = default(Guid);
-            if (IntPtr.Size == 4)
+            bool isPortable = pdbStream.ReadByte() == 'B' && pdbStream.ReadByte() == 'S' && pdbStream.ReadByte() == 'J' && pdbStream.ReadByte() == 'B';
+            pdbStream.Position = 0;
+
+            var metadataProvider = new SymMetadataProvider(peStream);
+
+            if (isPortable)
             {
-                CreateSymReader32(ref guid, out symReader);
+                return (ISymUnmanagedReader5)new  Microsoft.DiaSymReader.PortablePdb.SymBinder().GetReaderFromStream(
+                    pdbStream, 
+                    SymUnmanagedReaderFactory.CreateSymReaderMetadataImport(metadataProvider));
             }
             else
             {
-                CreateSymReader64(ref guid, out symReader);
+                return SymUnmanagedReaderFactory.CreateReader<ISymUnmanagedReader5>(pdbStream, metadataProvider);
             }
-            var reader = (ISymUnmanagedReader3)symReader;
-            var hr = reader.Initialize(new DummyMetadataImport(), null, null, new ComStreamWrapper(pdbStream));
-            Marshal.ThrowExceptionForHR(hr);
-            return reader;
         }
+        // private  ISymUnmanagedReader3 CreateNativeSymReader()
+        // {
+        //     var pdbStream = File.OpenRead(_pdbFullPath);
+        //     pdbStream.Position = 0;
+        //
+        //     object symReader = null;
+        //     var guid = default(Guid);
+        //     if (IntPtr.Size == 4)
+        //     {
+        //         CreateSymReader32(ref guid, out symReader);
+        //     }
+        //     else
+        //     {
+        //         CreateSymReader64(ref guid, out symReader);
+        //     }
+        //     var reader = (ISymUnmanagedReader3)symReader;
+        //     var hr = reader.Initialize(new DummyMetadataImport(), null, null, new ComStreamWrapper(pdbStream));
+        //     Marshal.ThrowExceptionForHR(hr);
+        //     return reader;
+        // }
 
         public void Dispose()
         {

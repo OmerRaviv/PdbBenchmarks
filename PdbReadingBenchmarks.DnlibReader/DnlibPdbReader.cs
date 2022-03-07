@@ -7,11 +7,13 @@ using System.Reflection;
 using System.Text;
 using dnlib.DotNet;
 using dnlib.DotNet.MD;
-using dnlib.DotNet.Pdb;
+using dnlib.DotNet.Pdb.Managed;
+using dnlib.DotNet.Pdb.Portable;
 using dnlib.DotNet.Pdb.Symbols;
 using dnlib.IO;
 using PdbReadingBenchmarks.Contracts;
 using SequencePoint = PdbReadingBenchmarks.Contracts.SequencePoint;
+using SymbolReaderFactory = dnlib.DotNet.Pdb.SymbolReaderFactory;
 
 namespace PdbReadingBenchmarks.DnlibReader
 {
@@ -29,7 +31,11 @@ namespace PdbReadingBenchmarks.DnlibReader
             _assemblyFullPath = assemblyFullPath;
             _pdbFullPath = pdbFullPath;
             _module = ModuleDefMD.Load(File.OpenRead(_assemblyFullPath));
-            _reader = CreateSymbolReader(new ModuleCreationOptions(CLRRuntimeReaderKind.CLR));
+            _reader = CreateSymbolReader(new ModuleCreationOptions(CLRRuntimeReaderKind.CLR)
+            {
+	            PdbFileOrData = _pdbFullPath,
+	        //    PdbOptions = PdbReaderOptions.MicrosoftComReader
+            });
             _reader.Initialize(_module);
         }
         
@@ -93,48 +99,9 @@ namespace PdbReadingBenchmarks.DnlibReader
         //     return methodExtentsByDocument;
         //
         // }
+        
 
-        private int GetDocumentRid(Metadata pdbMetadata, string documentUrl)
-        {
-            
-            var docTbl = pdbMetadata.TablesStream.DocumentTable;
-            var docs = new SymbolDocument[docTbl.Rows];
-            var nameReader = new DocumentNameReader(pdbMetadata.BlobStream);
-            for (int i = 0; i < docs.Length; i++)
-            {
-                if (!pdbMetadata.TablesStream.TryReadDocumentRow((uint)i + 1, out var row)) continue;
-                
-                var url = nameReader.ReadDocumentName(row.Name);
-
-             
-                if (url == documentUrl) return i + 1;
-            }
-
-            return -1;
-        }
-
-        private IEnumerable<uint> GetMethodsContainedInDocument(string documentUrl)
-        {
-            Metadata pdbMetadata = (Metadata)_reader.GetType().GetField("pdbMetadata", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(_reader);
-            int requestedDocumentRid = GetDocumentRid(pdbMetadata, documentUrl);
-            
-            for (uint methodRid = 0; methodRid < pdbMetadata.TablesStream.MethodDebugInformationTable.Rows; methodRid++)
-            {
-                if (!pdbMetadata.TablesStream.TryReadMethodDebugInformationRow(methodRid, out var row))
-                    continue;
-
-                if (row.SequencePoints == 0)
-                    continue;
-
-
-                if (row.Document == requestedDocumentRid)
-                {
-                    yield return methodRid;
-                }
-            }
-        }
-
-        public class FakeMethodDef : MethodDef
+        private class FakeMethodDef : MethodDef
         {
             public FakeMethodDef(uint rid)
             {
@@ -146,7 +113,6 @@ namespace PdbReadingBenchmarks.DnlibReader
         {
             foreach (var methodRid in GetMethodsContainedInDocument(filePath))
             {
-                //var method = _module.ResolveMethod((uint)methodRid);
                 var method = new FakeMethodDef(methodRid);
                 var symbolMethod = _reader.GetMethod(method, 1);
                 foreach (var sp in symbolMethod.SequencePoints)
@@ -164,45 +130,17 @@ namespace PdbReadingBenchmarks.DnlibReader
                 }
             }
             return new LineDebugInfo(default, default, default);
-
-            //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
         }
-        // public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
-        //     string filePath, int line, int column)
-        // {
-        //     
-        //     if (!_methodExtentsByDocument.Value.TryGetValue(filePath, out var methodExtentsInDoc))
-        //     {
-        //         return new LineDebugInfo(default, default, default);
-        //     }
-        //
-        //     foreach (var methodLineExtent in methodExtentsInDoc)
-        //     {
-        //         if (line > methodLineExtent.MinLine && line < methodLineExtent.MaxLine)
-        //         {
-        //             var method = _module.ResolveMethod(methodLineExtent.Method);
-        //             var symbolMethod = _reader.GetMethod(method, 1);
-        //             foreach (var sp in symbolMethod.SequencePoints)
-        //             {
-        //                 if (sp.Line <= line &&
-        //                     sp.EndLine >= line &&
-        //                     sp.Column >= column &&
-        //                     sp.EndColumn >= column)
-        //                 {
-        //                     return new LineDebugInfo(
-        //                         MethodToken: (int)method.MDToken.Raw, 
-        //                         ILOffset: sp.Offset,
-        //                         Locals: GetVariablesInScope(symbolMethod, sp.Offset));
-        //                 }
-        //             }
-        //
-        //             
-        //         }
-        //     }
-        //     return new LineDebugInfo(default, default, default);
-        //
-        //     //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
-        // }
+
+        private IEnumerable<uint> GetMethodsContainedInDocument(string filePath)
+        {
+	        return _reader switch
+	        {
+		        PortablePdbReader portablePdbReader => portablePdbReader.GetMethodsContainedInDocument(filePath),
+		        
+		        _ => throw new ArgumentOutOfRangeException(nameof(filePath), $"Reader type {_reader.GetType().FullName} is not supported")
+	        };
+        }
 
         private List<Variable> GetVariablesInScope(SymbolMethod method, int offset)
         {
@@ -234,91 +172,30 @@ namespace PdbReadingBenchmarks.DnlibReader
 
         public MethodDebugInfo GetDebugInfo(int methodMetadataToken)
         {
-            MethodDef? methodDef = _module.ResolveMethod(MDToken.ToRID(methodMetadataToken));
-            // SymbolMethod method = _reader.GetMethod(methodDef, 1);
-            //
-            // var variables = method.RootScope.Children.First().Locals.Select(v => new Variable(v.Index, v.Name)).ToList();
-            // var sequencePoints = method.SequencePoints.Select(s => new SequencePoint()
-            // {
-            //     DocumentUrl = s.Document.URL,
-            //     StartLine = s.Line,
-            //     EndLine = s.EndLine,
-            //     StartColumn = s.Column,
-            //     EndColumn = s.EndColumn,
-            //     Offset = s.Offset
-            // }).ToList();
-            var variables = methodDef.Body.PdbMethod.Scope.Scopes.First().Variables.Select(v => new Variable(v.Index, v.Name)).ToList();
-            ;
-            var sequencePoints = methodDef.Body
-                .Instructions
-                .Where(i => i.SequencePoint is not null)
-                .GroupBy(i => i.SequencePoint, new dnlibSpComparer())
+	        var rid = MDToken.ToRID(methodMetadataToken);
+	        var method = _reader.GetMethod(new FakeMethodDef(rid), 1);
+	        var variables = 
+		        GetAllScopes(method)
+					.SelectMany(m => m.Locals)
+					.Select(l => new Variable(l.Index, l.Name))
+					.ToList();
+	            	        
+            var sequencePoints = method.SequencePoints
                 .Select(s => new SequencePoint()
             {
-                DocumentUrl = s.Key.Document.Url,
-                StartLine = s.Key.StartLine,
-                EndLine = s.Key.EndLine,
-                StartColumn = s.Key.StartColumn,
-                EndColumn = s.Key.EndColumn,
-                Offset = (int)s.Min(i => i.Offset)
+                DocumentUrl = s.Document.URL,
+                StartLine = s.Line,
+                EndLine = s.EndLine,
+                StartColumn = s.Column,
+                EndColumn = s.EndColumn,
+                Offset = s.Offset
                 
             }).ToList();
             return new MethodDebugInfo(sequencePoints, variables);
-            //return (sequencePoints, variables);
+
         }
     }
 
-    public class dnlibSpComparer : IEqualityComparer<dnlib.DotNet.Pdb.SequencePoint>
-    {
-        public bool Equals(dnlib.DotNet.Pdb.SequencePoint x, dnlib.DotNet.Pdb.SequencePoint y)
-        {
-            if (ReferenceEquals(x, y)) return true;
-            if (ReferenceEquals(x, null)) return false;
-            if (ReferenceEquals(y, null)) return false;
-            if (x.GetType() != y.GetType()) return false;
-            return Equals(x.Document, y.Document) && x.StartLine == y.StartLine && x.StartColumn == y.StartColumn && x.EndLine == y.EndLine && x.EndColumn == y.EndColumn;
-        }
-
-        public int GetHashCode(dnlib.DotNet.Pdb.SequencePoint obj)
-        {
-            unchecked
-            {
-                var hashCode = (obj.Document != null ? obj.Document.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ obj.StartLine;
-                hashCode = (hashCode * 397) ^ obj.StartColumn;
-                hashCode = (hashCode * 397) ^ obj.EndLine;
-                hashCode = (hashCode * 397) ^ obj.EndColumn;
-                return hashCode;
-            }
-        }
-    }
-
-    public class SPEqualityCompare : IEqualityComparer<SequencePoint>
-    {
-        public bool Equals(SequencePoint x, SequencePoint y)
-        {
-            if (ReferenceEquals(x, y)) return true;
-            if (ReferenceEquals(x, null)) return false;
-            if (ReferenceEquals(y, null)) return false;
-            if (x.GetType() != y.GetType()) return false;
-            return x.Offset == y.Offset && x.EndOffset == y.EndOffset && x.StartLine == y.StartLine && x.StartColumn == y.StartColumn && x.EndLine == y.EndLine && x.EndColumn == y.EndColumn && x.DocumentUrl == y.DocumentUrl;
-        }
-
-        public int GetHashCode(SequencePoint obj)
-        {
-            unchecked
-            {
-                var hashCode = obj.Offset;
-                hashCode = (hashCode * 397) ^ obj.EndOffset;
-                hashCode = (hashCode * 397) ^ obj.StartLine;
-                hashCode = (hashCode * 397) ^ obj.StartColumn;
-                hashCode = (hashCode * 397) ^ obj.EndLine;
-                hashCode = (hashCode * 397) ^ obj.EndColumn;
-                hashCode = (hashCode * 397) ^ obj.DocumentUrl.GetHashCode();
-                return hashCode;
-            }
-        }
-    }
     [DebuggerDisplay("{GetDebuggerDisplay(),nq}")]
     internal readonly struct MethodLineExtent
     {

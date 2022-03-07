@@ -7,13 +7,13 @@ the overall performance will likely won't be hugely effected by PDB reading perf
 
 The motivation for creating these benchmarks is more around measuring the memory impact - as different libraries have wildly different characteristics both in terms of native and managed allocations. This is very significant, especially in memory constrained production environments (e.g. linux containers running in k8).
 
-##How do these benchmarks work?
+## How do these benchmarks work?
 This repo utilizes Benchmark.NET and xUnit side by side, so that you can easily benchmark or run/debug each variation. 
 
-##What libraries are included?
-- `Mono.Cecil` 
+## What libraries are included?
+See  [PDB Library enum](https://github.com/OmerRaviv/PdbBenchmarks/blob/main/PdbReadingBenchmarks/PdbReaderLibrary.cs#L3).
 
-###Why isn't library XYZ included in this benchmark?
+### Why isn't library XYZ included in this benchmark?
 
 - [`PPDB`](https://github.com/AaronRobinsonMSFT/PPDB) is a very nice native implementation of a Portable PDB reader, that seems to be very much based on `System.Reflection.Metadata`'s design. This library was not included because it seems it has [not been thoroughly tested in production use-cases](https://github.com/AaronRobinsonMSFT/PPDB/issues/9).
 - `dbghelp` is a Win32 API that can be easily used via PInvoke to read Windows PDBs with excellent performance. It was not included in this benchmark because, being a legacy API, it only has the notion of line numbers, and not column numbers, which makes it inadequate for handling modern C# code which may contain several lambda methods in the same line of code.

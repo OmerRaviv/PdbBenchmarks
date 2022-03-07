@@ -1,6 +1,6 @@
 This repo contains benchmarks for several popular managed PDB readers (for both Windows and Portable PDBs), with a specific interest in gauging which library is best for production diagnostic use cases, where the PDB reading will be performed in a production environment, and possibly from within the monitored application itself.
 
-##Why even bother doing a benchmark on PDB readers?
+## Why even bother doing a benchmark on PDB readers?
 In most use cases, production diagnostics tools (such as debugger and profilers) only need to make a few (dozens or hundreds) reads 
 from PDB at any given time. Even code coverage tools, which need to read sequence points for each and every executed method,
 the overall performance will likely won't be hugely effected by PDB reading performance.

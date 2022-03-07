@@ -4,7 +4,7 @@ This repo contains benchmarks for several popular managed PDB readers (for both 
 ## Why even bother doing a benchmark on PDB readers?
 In most use cases, production diagnostics tools (such as debugger and profilers) only need to make a few (dozens or hundreds) reads 
 from PDB at any given time. Even code coverage tools, which need to read sequence points for each and every executed method,
-the overall performance will likely won't be hugely effected by PDB reading performance.
+the overall performance likely won't be hugely effected by PDB reading performance.
 
 The motivation for creating these benchmarks is more around measuring the memory impact - as different libraries have wildly different characteristics both in terms of native and managed allocations. This is very significant, especially in memory constrained production environments (e.g. linux containers running in k8).
 

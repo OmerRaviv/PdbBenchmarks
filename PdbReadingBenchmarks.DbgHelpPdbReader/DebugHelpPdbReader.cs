@@ -67,8 +67,6 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
 
         private bool EnumParamsCallback(in SYMBOL_INFO psyminfo, uint symbolsize, IntPtr usercontext)
         {
-            
-            Console.WriteLine($" IN ENUM ->>>> {psyminfo.Name} {psyminfo.Index}");
             return true;
         }
 

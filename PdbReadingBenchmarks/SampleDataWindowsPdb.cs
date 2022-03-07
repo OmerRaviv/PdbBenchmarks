@@ -22,24 +22,27 @@ namespace PdbReadingBenchmarks
         public string SampleFilePath { get; init; }
         public int Line { get; init; }
         public int Column { get; init; }
+    
+        public int MethodToken { get; init; }
 
-        public int GetSampleMethodToken() 
-        {
-            unsafe
-            {
-                using Stream fileStream = File.OpenRead(AssemblyFullPath);
-                using var reader = new PEReader(fileStream);
-
-                var image = reader.GetEntireImage();
-
-                using (var stream = new UnmanagedMemoryStream(image.Pointer, image.Length))
-                using (var moduleDef = ModuleDefinition.ReadModule(stream))
-                {
-                    var method = moduleDef.GetType(ClassName).GetMethods().First(
-                        m => m.Name == MethodName);
-                    return method.MetadataToken.ToInt32();
-                }
-            }
-        }
+        public int GetSampleMethodToken() => MethodToken;
+        // public int GetSampleMethodToken() 
+        // {
+        //     unsafe
+        //     {
+        //         using Stream fileStream = File.OpenRead(AssemblyFullPath);
+        //         using var reader = new PEReader(fileStream);
+        //
+        //         var image = reader.GetEntireImage();
+        //
+        //         using (var stream = new UnmanagedMemoryStream(image.Pointer, image.Length))
+        //         using (var moduleDef = ModuleDefinition.ReadModule(stream))
+        //         {
+        //             var method = moduleDef.GetType(ClassName).GetMethods().First(
+        //                 m => m.Name == MethodName);
+        //             return method.MetadataToken.ToInt32();
+        //         }
+        //     }
+        // }
     }
 }

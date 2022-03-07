@@ -12,8 +12,7 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
     {
         private readonly string _pdbFullPath;
         private readonly string _assemblyFullPath;
-
-
+        
         public DiaSymReaderPdbReader(string pdbFullPath, string assemblyFullPath)
         {
             _pdbFullPath = pdbFullPath;
@@ -57,7 +56,7 @@ namespace PdbReadingBenchmarks.DiaNativeSymReader
         private List<Variable> GetLocalVariables(ISymUnmanagedMethod method, int? bytecodeOffset = null)
         {
             return GetScopes(method, bytecodeOffset).SelectMany(s => s.GetLocals()
-                .Select(l => new Variable(0, l.GetName()))).ToList();
+                .Select((l,i) => new Variable(i, l.GetName()))).ToList();
         }
         
         void RetrieveScopes(ISymUnmanagedScope scope, int? bytecodeOffset, List<ISymUnmanagedScope> result)

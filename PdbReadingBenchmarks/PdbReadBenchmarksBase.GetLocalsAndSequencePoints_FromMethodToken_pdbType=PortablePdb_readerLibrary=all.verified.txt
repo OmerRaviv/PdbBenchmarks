@@ -1,0 +1,242 @@
+{
+  SequencePoints: [
+    {
+      StartLine: 513,
+      StartColumn: 13,
+      EndLine: 513,
+      EndColumn: 45,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 7,
+      StartLine: 515,
+      StartColumn: 13,
+      EndLine: 515,
+      EndColumn: 23,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 69,
+      StartLine: 519,
+      StartColumn: 21,
+      EndLine: 519,
+      EndColumn: 49,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 75,
+      StartLine: 521,
+      StartColumn: 21,
+      EndLine: 521,
+      EndColumn: 49,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 82,
+      StartLine: 522,
+      StartColumn: 21,
+      EndLine: 522,
+      EndColumn: 43,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 88,
+      StartLine: 524,
+      StartColumn: 21,
+      EndLine: 524,
+      EndColumn: 58,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 98,
+      StartLine: 526,
+      StartColumn: 25,
+      EndLine: 526,
+      EndColumn: 163,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 131,
+      StartLine: 529,
+      StartColumn: 21,
+      EndLine: 529,
+      EndColumn: 60,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 141,
+      StartLine: 530,
+      StartColumn: 21,
+      EndLine: 530,
+      EndColumn: 33,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 143,
+      StartLine: 536,
+      StartColumn: 21,
+      EndLine: 536,
+      EndColumn: 46,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 155,
+      StartLine: 540,
+      StartColumn: 21,
+      EndLine: 540,
+      EndColumn: 39,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 163,
+      StartLine: 542,
+      StartColumn: 25,
+      EndLine: 542,
+      EndColumn: 67,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 170,
+      StartLine: 543,
+      StartColumn: 21,
+      EndLine: 543,
+      EndColumn: 22,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 172,
+      StartLine: 544,
+      StartColumn: 26,
+      EndLine: 544,
+      EndColumn: 74,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 182,
+      StartLine: 546,
+      StartColumn: 25,
+      EndLine: 546,
+      EndColumn: 49,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 191,
+      StartLine: 547,
+      StartColumn: 21,
+      EndLine: 547,
+      EndColumn: 22,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 193,
+      StartLine: 550,
+      StartColumn: 25,
+      EndLine: 550,
+      EndColumn: 60,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 201,
+      StartLine: 553,
+      StartColumn: 21,
+      EndLine: 553,
+      EndColumn: 60,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 212,
+      StartLine: 554,
+      StartColumn: 21,
+      EndLine: 554,
+      EndColumn: 33,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 215,
+      StartLine: 559,
+      StartColumn: 21,
+      EndLine: 559,
+      EndColumn: 33,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 217,
+      StartLine: 561,
+      StartColumn: 21,
+      EndLine: 561,
+      EndColumn: 42,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 241,
+      StartLine: 563,
+      StartColumn: 25,
+      EndLine: 563,
+      EndColumn: 56,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 250,
+      StartLine: 564,
+      StartColumn: 25,
+      EndLine: 564,
+      EndColumn: 64,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 261,
+      StartLine: 565,
+      StartColumn: 25,
+      EndLine: 565,
+      EndColumn: 37,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 264,
+      StartLine: 568,
+      StartColumn: 21,
+      EndLine: 568,
+      EndColumn: 42,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 276,
+      StartLine: 570,
+      StartColumn: 21,
+      EndLine: 570,
+      EndColumn: 53,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    },
+    {
+      Offset: 283,
+      StartLine: 573,
+      StartColumn: 13,
+      EndLine: 573,
+      EndColumn: 143,
+      DocumentUrl: '/_/Src/Newtonsoft.Json/JsonReader.cs'
+    }
+  ],
+  Variables: [
+    {
+      Name: 't'
+    },
+    {
+      Name: 'g2'
+    },
+    {
+      Name: 'data'
+    },
+    {
+      Name: 's'
+    },
+    {
+      Name: 'data'
+    },
+    {
+      Name: 'g1'
+    },
+    {
+      Name: 'data'
+    }
+  ]
+}

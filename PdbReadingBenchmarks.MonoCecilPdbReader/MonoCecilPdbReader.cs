@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection.PortableExecutable;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -91,15 +90,6 @@ namespace PdbReadingBenchmarks
 
             return sequencePoints;
         }
-
-        private static MethodDefinition GetSampleMethod(ModuleDefinition moduleDef, string type, string method)
-        {
-            return moduleDef.Assembly.MainModule
-                .Types.First(t => t.Name == type)
-                .Methods.First(m => m.Name == method);
-        }
-
-
     }
     
 }

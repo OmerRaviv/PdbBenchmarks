@@ -9,7 +9,7 @@ using dnlib.DotNet.Pdb.Symbols;
 using dnlib.DotNet.Pdb.WindowsPdb;
 
 namespace dnlib.DotNet.Pdb.Dss {
-	sealed class SymbolReaderImpl : SymbolReader {
+	sealed partial class SymbolReaderImpl : SymbolReader {
 		ModuleDef module;
 		ISymUnmanagedReader reader;
 		object[] objsToKeepAlive;

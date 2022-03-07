@@ -25,7 +25,8 @@ namespace PdbReadingBenchmarks
         }
 
         public static IEnumerable<object[]> LineProbeSupportedScenarios => AllScenarios.Where(obj => 
-            obj[1].Equals(PdbReaderLibrary.Dnlib) ||
+            obj[1].Equals(PdbReaderLibrary.Dnlib_Managed) ||
+            obj[1].Equals(PdbReaderLibrary.Dnlib_DiaSymReader) ||
             obj[1].Equals(PdbReaderLibrary.DiaNativeSymReader));
     }
     
@@ -34,7 +35,7 @@ namespace PdbReadingBenchmarks
     {
         [Theory]    [MemberData(nameof(AllScenarios))]
         [Benchmark] [ArgumentsSource(nameof(AllScenarios))]
-        public Task GetFileLineNumber_FromMethodTokenAndBytecodeOffset(PdbType pdbType, PdbReaderLibrary readerLibrary)
+        public Task GetLocalsAndSequencePoints_FromMethodToken(PdbType pdbType, PdbReaderLibrary readerLibrary)
         {
             var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
             var sampleData = SampleDataFactory.GetSampleData(pdbType);

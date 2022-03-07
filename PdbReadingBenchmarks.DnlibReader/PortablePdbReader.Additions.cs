@@ -7,10 +7,33 @@ namespace dnlib.DotNet.Pdb.Portable
 {
     sealed partial class PortablePdbReader
     {
-        internal IEnumerable<uint> GetMethodsContainedInDocument(string documentUrl)
+        internal SymbolMethod GetContainingMethod(string documentUrl, int line, int column, out int? bytecodeOffset)
+        {
+            foreach (uint methodRid in GetMethodRIDsContainedInDocument(documentUrl))
+            {
+                var method = ((ModuleDefMD)module).ResolveMethod(methodRid);
+                var symbolMethod = this.GetMethod(method, 1);
+                foreach (var sp in symbolMethod.SequencePoints)
+                {
+                    if (sp.Line <= line &&
+                        sp.EndLine >= line &&
+                        sp.Column >= column &&
+                        sp.EndColumn >= column)
+                    {
+                        bytecodeOffset = sp.Offset;
+                        return symbolMethod;
+                    }
+                }
+            }
+
+            bytecodeOffset = null;
+            return null;
+        }
+
+        private IEnumerable<uint> GetMethodRIDsContainedInDocument(string documentUrl)
         {
             int requestedDocumentRid = GetDocumentRid(documentUrl);
-            
+
             for (uint methodRid = 0; methodRid < pdbMetadata.TablesStream.MethodDebugInformationTable.Rows; methodRid++)
             {
                 if (!pdbMetadata.TablesStream.TryReadMethodDebugInformationRow(methodRid, out var row))
@@ -26,6 +49,7 @@ namespace dnlib.DotNet.Pdb.Portable
                 }
             }
         }
+
         private int GetDocumentRid(string documentUrl)
         {
             var docTbl = pdbMetadata.TablesStream.DocumentTable;

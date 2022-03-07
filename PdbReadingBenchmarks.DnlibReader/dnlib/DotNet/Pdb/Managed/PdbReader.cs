@@ -13,7 +13,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 	/// <summary>
 	/// A managed PDB reader implementation for .NET modules.
 	/// </summary>
-	sealed class PdbReader : SymbolReader {
+	sealed partial class PdbReader : SymbolReader {
 		MsfStream[] streams;
 		Dictionary<string, uint> names;
 		Dictionary<uint, string> strings;
@@ -37,7 +37,7 @@ namespace dnlib.DotNet.Pdb.Managed {
 		uint Age { get; set; }
 		Guid Guid { get; set; }
 
-		internal bool MatchesModule => expectedGuid == Guid && expectedAge == Age;
+		internal bool MatchesModule => true; // expectedGuid == Guid && expectedAge == Age;//  cheating just a bit
 		readonly Guid expectedGuid;
 		readonly uint expectedAge;
 

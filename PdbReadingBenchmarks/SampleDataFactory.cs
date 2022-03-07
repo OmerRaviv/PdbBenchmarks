@@ -26,6 +26,7 @@ namespace PdbReadingBenchmarks
                 Column = 21,
                 ClassName = "Newtonsoft.Json.JsonReader",
                 MethodName = "ReadAsBytes",
+                MethodToken = 100663545
             };
         }
 
@@ -42,6 +43,7 @@ namespace PdbReadingBenchmarks
                 Column = 17,
                 ClassName = "NUnit.Framework.Api.FrameworkController",
                 MethodName = "RunTests",
+                MethodToken = 100666261
             };
         }
     }

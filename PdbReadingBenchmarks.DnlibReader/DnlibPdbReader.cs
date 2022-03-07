@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Text;
 using dnlib.DotNet;
 using dnlib.DotNet.MD;
+using dnlib.DotNet.Pdb;
+using dnlib.DotNet.Pdb.Dss;
 using dnlib.DotNet.Pdb.Managed;
 using dnlib.DotNet.Pdb.Portable;
 using dnlib.DotNet.Pdb.Symbols;
@@ -26,15 +28,15 @@ namespace PdbReadingBenchmarks.DnlibReader
         private readonly SymbolReader _reader;
 
 
-        public DnlibPdbReader(string assemblyFullPath, string pdbFullPath)
+        public DnlibPdbReader(string assemblyFullPath, string pdbFullPath, bool useDiaSymReader)
         {
             _assemblyFullPath = assemblyFullPath;
             _pdbFullPath = pdbFullPath;
-            _module = ModuleDefMD.Load(File.OpenRead(_assemblyFullPath));
+            _module = useDiaSymReader ? null : ModuleDefMD.Load(File.OpenRead(_assemblyFullPath));
             _reader = CreateSymbolReader(new ModuleCreationOptions(CLRRuntimeReaderKind.CLR)
             {
 	            PdbFileOrData = _pdbFullPath,
-	        //    PdbOptions = PdbReaderOptions.MicrosoftComReader
+	            PdbOptions = useDiaSymReader ? PdbReaderOptions.MicrosoftComReader : PdbReaderOptions.None
             });
             _reader.Initialize(_module);
         }
@@ -63,44 +65,6 @@ namespace PdbReadingBenchmarks.DnlibReader
 	        return null;
         }
 
-
-        private Lazy<Dictionary<string, List<MethodLineExtent>>> _methodExtentsByDocument;
-
-        // private Dictionary<string, List<MethodLineExtent>> CalculateMethodExtentsByDocument()
-        // {
-        //     Dictionary<string, List<MethodLineExtent>> methodExtentsByDocument = new();
-        //     foreach (var types in _module.Types)
-        //     {
-        //         foreach (MethodDef method in types.Methods)
-        //         {
-        //             var symbolMethod = _reader.GetMethod(method, 1);
-        //             int minLine = int.MaxValue, maxLine = int.MinValue;
-        //
-        //             
-        //             string document = null;
-        //             foreach (var sp in symbolMethod.SequencePoints)
-        //             {
-        //                 document ??= sp.Document.URL;
-        //                 
-        //                 if (sp.Line < minLine) minLine = sp.Line;
-        //                 if (sp.EndLine > maxLine) maxLine = sp.EndLine;
-        //             }
-        //
-        //             if (document == null) continue;
-        //             if (!methodExtentsByDocument.TryGetValue(document, out var methodExtentsInDoc))
-        //             {
-        //                 methodExtentsByDocument[document] = methodExtentsInDoc = new List<MethodLineExtent>();
-        //             }
-        //             
-        //             methodExtentsInDoc.Add(new MethodLineExtent(method.Rid,1, minLine, maxLine));
-        //         }
-        //     }
-        //
-        //     return methodExtentsByDocument;
-        //
-        // }
-        
-
         private class FakeMethodDef : MethodDef
         {
             public FakeMethodDef(uint rid)
@@ -111,33 +75,25 @@ namespace PdbReadingBenchmarks.DnlibReader
         public LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(
             string filePath, int line, int column)
         {
-            foreach (var methodRid in GetMethodsContainedInDocument(filePath))
+            var method = GetContainingMethodAndOffset(filePath,line, column, out int? offset);
+            if (method != null)
             {
-                var method = new FakeMethodDef(methodRid);
-                var symbolMethod = _reader.GetMethod(method, 1);
-                foreach (var sp in symbolMethod.SequencePoints)
-                {
-                    if (sp.Line <= line &&
-                        sp.EndLine >= line &&
-                        sp.Column >= column &&
-                        sp.EndColumn >= column)
-                    {
-                        return new LineDebugInfo(
-                            MethodToken: (int)method.MDToken.Raw,
-                            ILOffset: sp.Offset,
-                            Locals: GetVariablesInScope(symbolMethod, sp.Offset));
-                    }
-                }
+	            return new LineDebugInfo(
+		            MethodToken: method.Token,
+		            ILOffset: offset.Value,
+		            Locals: GetVariablesInScope(method, offset.Value));
             }
+
             return new LineDebugInfo(default, default, default);
         }
 
-        private IEnumerable<uint> GetMethodsContainedInDocument(string filePath)
+        private SymbolMethod GetContainingMethodAndOffset(string filePath, int line, int column, out int? bytecodeOffset)
         {
 	        return _reader switch
 	        {
-		        PortablePdbReader portablePdbReader => portablePdbReader.GetMethodsContainedInDocument(filePath),
-		        
+		        PortablePdbReader portablePdbReader => portablePdbReader.GetContainingMethod(filePath,line, column, out bytecodeOffset),
+		        PdbReader managedPdbReader => managedPdbReader.GetContainingMethod(filePath, line, column, out bytecodeOffset),
+		        SymbolReaderImpl symUnmanagedReader => symUnmanagedReader.GetContainingMethod(filePath, line, column, out bytecodeOffset),
 		        _ => throw new ArgumentOutOfRangeException(nameof(filePath), $"Reader type {_reader.GetType().FullName} is not supported")
 	        };
         }
@@ -172,8 +128,10 @@ namespace PdbReadingBenchmarks.DnlibReader
 
         public MethodDebugInfo GetDebugInfo(int methodMetadataToken)
         {
-	        var rid = MDToken.ToRID(methodMetadataToken);
-	        var method = _reader.GetMethod(new FakeMethodDef(rid), 1);
+	        var rid = MDToken.ToRID(methodMetadataToken); 
+	        var mdMethod = new FakeMethodDef(rid);
+	        //var mdMethod = _module.ResolveMethod(rid);
+	        var method = _reader.GetMethod(mdMethod, 1);
 	        var variables = 
 		        GetAllScopes(method)
 					.SelectMany(m => m.Locals)
@@ -195,137 +153,4 @@ namespace PdbReadingBenchmarks.DnlibReader
 
         }
     }
-
-    [DebuggerDisplay("{GetDebuggerDisplay(),nq}")]
-    internal readonly struct MethodLineExtent
-    {
-        internal sealed class MethodComparer : IComparer<MethodLineExtent>
-        {
-            public static readonly MethodComparer Instance = new MethodComparer();
-            public int Compare(MethodLineExtent x, MethodLineExtent y) => x.Method.CompareTo(y.Method);
-        }
-
-        internal sealed class MinLineComparer : IComparer<MethodLineExtent>
-        {
-            public static readonly MinLineComparer Instance = new MinLineComparer();
-            public int Compare(MethodLineExtent x, MethodLineExtent y) => x.MinLine - y.MinLine;
-        }
-
-        public readonly uint Method;
-        public readonly int Version;
-        public readonly int MinLine;
-        public readonly int MaxLine;
-
-        public MethodLineExtent(uint method, int version, int minLine, int maxLine)
-        {
-            Method = method;
-            Version = version;
-            MinLine = minLine;
-            MaxLine = maxLine;
-        }
-
-        public static MethodLineExtent Merge(MethodLineExtent left, MethodLineExtent right)
-        {
-            Debug.Assert(left.Method == right.Method);
-            Debug.Assert(left.Version == right.Version);
-            return new MethodLineExtent(left.Method, left.Version, Math.Min(left.MinLine, right.MinLine), Math.Max(left.MaxLine, right.MaxLine));
-        }
-
-        public MethodLineExtent ApplyDelta(int delta) =>
-            new MethodLineExtent(Method, Version, MinLine + delta, MaxLine + delta);
-
-        private string GetDebuggerDisplay() =>
-            $"{Method} v{Version} [{MinLine}-{MaxLine}]";
-    }
-
-    	struct DocumentNameReader {
-		const int MAX_NAME_LENGTH = 64 * 1024;
-		readonly Dictionary<uint, string> docNamePartDict;
-		readonly BlobStream blobStream;
-		readonly StringBuilder sb;
-
-		char[] prevSepChars;
-		int prevSepCharsLength;
-		byte[] prevSepCharBytes;
-		int prevSepCharBytesCount;
-
-		public DocumentNameReader(BlobStream blobStream) {
-			docNamePartDict = new Dictionary<uint, string>();
-			this.blobStream = blobStream;
-			sb = new StringBuilder();
-
-			prevSepChars = new char[2];
-			prevSepCharsLength = 0;
-			prevSepCharBytes = new byte[3];
-			prevSepCharBytesCount = 0;
-		}
-
-		public string ReadDocumentName(uint offset) {
-			sb.Length = 0;
-			if (!blobStream.TryCreateReader(offset, out var reader))
-				return string.Empty;
-			var sepChars = ReadSeparatorChar(ref reader, out int sepCharsLength);
-			bool needSep = false;
-			while (reader.Position < reader.Length) {
-				if (needSep)
-					sb.Append(sepChars, 0, sepCharsLength);
-				needSep = !(sepCharsLength == 1 && sepChars[0] == '\0');
-				var part = ReadDocumentNamePart(reader.ReadCompressedUInt32());
-				sb.Append(part);
-				if (sb.Length > MAX_NAME_LENGTH) {
-					sb.Length = MAX_NAME_LENGTH;
-					break;
-				}
-			}
-			return sb.ToString();
-		}
-
-		string ReadDocumentNamePart(uint offset) {
-			if (docNamePartDict.TryGetValue(offset, out var name))
-				return name;
-			if (!blobStream.TryCreateReader(offset, out var reader))
-				return string.Empty;
-			name = reader.ReadUtf8String((int)reader.BytesLeft);
-			docNamePartDict.Add(offset, name);
-			return name;
-		}
-
-		char[] ReadSeparatorChar(ref DataReader reader, out int charLength) {
-			if (prevSepCharBytesCount != 0 && prevSepCharBytesCount <= reader.Length) {
-				var pos = reader.Position;
-				bool ok = true;
-				for (int i = 0; i < prevSepCharBytesCount; i++) {
-					if (i >= prevSepCharBytes.Length || reader.ReadByte() != prevSepCharBytes[i]) {
-						ok = false;
-						break;
-					}
-				}
-				if (ok) {
-					charLength = prevSepCharsLength;
-					return prevSepChars;
-				}
-				reader.Position = pos;
-			}
-
-			var decoder = Encoding.UTF8.GetDecoder();
-			var bytes = new byte[1];
-			prevSepCharBytesCount = 0;
-			for (int i = 0; ; i++) {
-				byte b = reader.ReadByte();
-				prevSepCharBytesCount++;
-				if (i == 0 && b == 0)
-					break;
-				if (i < prevSepCharBytes.Length)
-					prevSepCharBytes[i] = b;
-				bytes[0] = b;
-				bool isLastByte = reader.Position + 1 == reader.Length;
-				decoder.Convert(bytes, 0, 1, prevSepChars, 0, prevSepChars.Length, isLastByte, out int bytesUsed, out prevSepCharsLength, out bool completed);
-				if (prevSepCharsLength > 0)
-					break;
-			}
-			charLength = prevSepCharsLength;
-			return prevSepChars;
-		}
-	}
-
 }

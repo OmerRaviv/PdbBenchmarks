@@ -13,7 +13,7 @@ using VerifyXunit;
 
 namespace PdbReadingBenchmarks
 {
-    [RankColumn,MemoryDiagnoser,NativeMemoryProfiler]
+    [MemoryDiagnoser,NativeMemoryProfiler]
     [SimpleJob(RunStrategy.Monitoring, 10, 0, 100)]
     [UsesVerify]
     public class PdbReadBenchmarksBase
@@ -27,12 +27,12 @@ namespace PdbReadingBenchmarks
         public static IEnumerable<object[]> AllScenarios =>
             new[]
             {
-                new object[] { PdbType.WindowsPdb, PdbReaderLibrary.Dnlib },
-                new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DbgHelp },
+                new object[] { PdbType.WindowsPdb, PdbReaderLibrary.Dnlib_Managed },
+                new object[] { PdbType.WindowsPdb, PdbReaderLibrary.Dnlib_DiaSymReader },
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.MonoCecil },
                 new object[] { PdbType.WindowsPdb, PdbReaderLibrary.DiaNativeSymReader },
                 
-                new object[] { PdbType.PortablePdb, PdbReaderLibrary.Dnlib},
+                new object[] { PdbType.PortablePdb, PdbReaderLibrary.Dnlib_Managed},
                 new object[] { PdbType.PortablePdb, PdbReaderLibrary.DiaNativeSymReader },
             };
 
@@ -41,6 +41,7 @@ namespace PdbReadingBenchmarks
 #if DEBUG // Do not verify results if we're running a benchmark
             var verifySettings = new VerifySettings();
             verifySettings.UseParameters(pdbType, "all");
+            verifySettings.ScrubLinesContaining("Index:");
             return Verifier.Verify(results, verifySettings);
 #endif
             return Task.CompletedTask;
@@ -54,7 +55,8 @@ namespace PdbReadingBenchmarks
                 PdbReaderLibrary.DbgHelp => new DebugHelpPdbReader(sample.AssemblyFullPath),
                 PdbReaderLibrary.DiaNativeSymReader => new DiaSymReaderPdbReader(sample.PdbFilePath, sample.AssemblyFullPath),
                 PdbReaderLibrary.MonoCecil => new MonoCecilPdbReader(sample.AssemblyFullPath, sample.PdbFilePath),
-                PdbReaderLibrary.Dnlib => new DnlibReader.DnlibPdbReader(sample.AssemblyFullPath, sample.PdbFilePath),
+                PdbReaderLibrary.Dnlib_Managed => new DnlibReader.DnlibPdbReader(sample.AssemblyFullPath, sample.PdbFilePath, useDiaSymReader: false),
+                PdbReaderLibrary.Dnlib_DiaSymReader => new DnlibReader.DnlibPdbReader(sample.AssemblyFullPath, sample.PdbFilePath, useDiaSymReader: true),
                 _ => throw new ArgumentOutOfRangeException(nameof(readerLibrary), readerLibrary, null)
             };
         }

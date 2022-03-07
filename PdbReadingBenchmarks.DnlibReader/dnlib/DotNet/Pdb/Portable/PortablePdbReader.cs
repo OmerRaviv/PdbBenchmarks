@@ -11,7 +11,7 @@ using dnlib.DotNet.Pdb.Symbols;
 using dnlib.IO;
 
 namespace dnlib.DotNet.Pdb.Portable {
-	sealed class PortablePdbReader : SymbolReader {
+	sealed partial class PortablePdbReader : SymbolReader {
 		readonly PdbFileKind pdbFileKind;
 		ModuleDef module;
 		readonly Metadata pdbMetadata;

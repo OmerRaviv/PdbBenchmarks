@@ -1,25 +1,27 @@
+## What is this?
 This repo contains benchmarks for several popular managed PDB readers (for both Windows and Portable PDBs), with a specific interest in gauging which library is best for production diagnostic use cases, where the PDB reading will be performed in a production environment, and possibly from within the monitored application itself.
 
-##Why even bother doing a benchmark on PDB readers?
+## Why even bother doing a benchmark on PDB readers?
 In most use cases, production diagnostics tools (such as debugger and profilers) only need to make a few (dozens or hundreds) reads 
-from PDB at any given time. Even code coverage tools, which need to read sequence points for each and every executed method,
-the overall performance will likely won't be hugely effected by PDB reading performance.
+from PDB at any given time. Even in the case of code coverage tools, which need to read sequence points for each and every executed method,
+the overall performance likely won't be hugely effected by PDB reading performance.
 
 The motivation for creating these benchmarks is more around measuring the memory impact - as different libraries have wildly different characteristics both in terms of native and managed allocations. This is very significant, especially in memory constrained production environments (e.g. linux containers running in k8).
 
-##How do these benchmarks work?
+## How do these benchmarks work?
 This repo utilizes Benchmark.NET and xUnit side by side, so that you can easily benchmark or run/debug each variation. 
 
-##What libraries are included?
-- `Mono.Cecil` 
+## What libraries are included?
+See  [PDB Library enum](https://github.com/OmerRaviv/PdbBenchmarks/blob/main/PdbReadingBenchmarks/PdbReaderLibrary.cs#L3).
 
-###Why isn't library XYZ included in this benchmark?
+### Why isn't library XYZ included in this benchmark?
 
 - [`PPDB`](https://github.com/AaronRobinsonMSFT/PPDB) is a very nice native implementation of a Portable PDB reader, that seems to be very much based on `System.Reflection.Metadata`'s design. This library was not included because it seems it has [not been thoroughly tested in production use-cases](https://github.com/AaronRobinsonMSFT/PPDB/issues/9).
 - `dbghelp` is a Win32 API that can be easily used via PInvoke to read Windows PDBs with excellent performance. It was not included in this benchmark because, being a legacy API, it only has the notion of line numbers, and not column numbers, which makes it inadequate for handling modern C# code which may contain several lambda methods in the same line of code.
 
+If you feel there is another library that is worth including in these benchmarks, please don't hesitate and create an issue/PR for it.
 
-##Results
+## Results
 ``` ini
 
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.22000

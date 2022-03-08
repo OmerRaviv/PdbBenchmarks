@@ -19,6 +19,7 @@ See  [PDB Library enum](https://github.com/OmerRaviv/PdbBenchmarks/blob/main/Pdb
 - [`PPDB`](https://github.com/AaronRobinsonMSFT/PPDB) is a very nice native implementation of a Portable PDB reader, that seems to be very much based on `System.Reflection.Metadata`'s design. This library was not included because it seems it has [not been thoroughly tested in production use-cases](https://github.com/AaronRobinsonMSFT/PPDB/issues/9).
 - `dbghelp` is a Win32 API that can be easily used via PInvoke to read Windows PDBs with excellent performance. It was not included in this benchmark because, being a legacy API, it only has the notion of line numbers, and not column numbers, which makes it inadequate for handling modern C# code which may contain several lambda methods in the same line of code.
 
+If you feel there is another library that is worth including in these benchmarks, please don't hesitate and create an issue/PR for it.
 
 ## Results
 ``` ini

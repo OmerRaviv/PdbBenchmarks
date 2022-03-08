@@ -46,17 +46,14 @@ namespace PdbReadingBenchmarks.DnlibReader
 	        var metadata = MetadataFactory.Load(_assemblyFullPath, CLRRuntimeReaderKind.CLR);
 	        if (options.PdbFileOrData is not null) {
 		        var pdbFileName = options.PdbFileOrData as string;
-		        if (!string.IsNullOrEmpty(pdbFileName)) {
-			        var symReader = SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbFileName);
+		        if (!string.IsNullOrEmpty(pdbFileName))
+		        {
+			        var pdbStream = DataReaderFactoryFactory.Create(pdbFileName, false);
+			        var symReader = SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbStream);
 			        if (symReader is not null)
 				        return symReader;
 		        }
 
-		        if (options.PdbFileOrData is byte[] pdbData)
-			        return SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbData);
-
-		        if (options.PdbFileOrData is DataReaderFactory pdbStream)
-			        return SymbolReaderFactory.Create(options.PdbOptions, metadata, pdbStream);
 	        }
 
 	        if (options.TryToLoadPdbFromDisk)

@@ -89,5 +89,9 @@ namespace PdbReadingBenchmarks.DbgHelpPdbReader
      //       SymGetFileLineOffsets64( hProcess,Path.GetFileName(_assemblyFullPath),filePath )
             return new LineDebugInfo(default, default,default);
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

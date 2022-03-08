@@ -514,5 +514,9 @@ namespace WindowsPdbReader
             offset += 2;
             return retval;
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace PdbReadingBenchmarks.Contracts
@@ -7,7 +8,7 @@ namespace PdbReadingBenchmarks.Contracts
 
     public record LineDebugInfo(int MethodToken, int ILOffset, List<Variable> Locals); 
     
-    public interface IDebugInfoProvider
+    public interface IDebugInfoProvider : IDisposable
     {
        MethodDebugInfo GetDebugInfo(int methodMetadataToken);
        LineDebugInfo GetILOffsetAndLocals_FromDocumentPosition(string filePath, int line, int column);

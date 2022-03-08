@@ -14,7 +14,7 @@ namespace PdbReadingBenchmarks
         [Benchmark] [ArgumentsSource(nameof(LineProbeSupportedScenarios))]
         public Task GetILOffsetAndLocals_FromFileLine(PdbType pdbType, PdbReaderLibrary readerLibrary)
         {
-            var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
+            using var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
             var sampleData = SampleDataFactory.GetSampleData(pdbType);
             var result = reader.GetILOffsetAndLocals_FromDocumentPosition(
                 sampleData.SampleFilePath,
@@ -37,7 +37,7 @@ namespace PdbReadingBenchmarks
         [Benchmark] [ArgumentsSource(nameof(AllScenarios))]
         public Task GetLocalsAndSequencePoints_FromMethodToken(PdbType pdbType, PdbReaderLibrary readerLibrary)
         {
-            var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
+            using var reader = CreateDebugInfoProvider(readerLibrary, pdbType);
             var sampleData = SampleDataFactory.GetSampleData(pdbType);
             var methodToken = sampleData.GetSampleMethodToken();
             var result = reader.GetDebugInfo(methodToken);

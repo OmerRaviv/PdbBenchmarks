@@ -30,7 +30,7 @@ namespace PdbReadingBenchmarks.DnlibReader
 
         public DnlibPdbReader(string assemblyFullPath, string pdbFullPath, bool useDiaSymReader)
         {
-            _assemblyFullPath = assemblyFullPath;
+	        _assemblyFullPath = assemblyFullPath;
             _pdbFullPath = pdbFullPath;
             _module = useDiaSymReader ? null : ModuleDefMD.Load(File.OpenRead(_assemblyFullPath));
             _reader = CreateSymbolReader(new ModuleCreationOptions(CLRRuntimeReaderKind.CLR)
@@ -151,6 +151,12 @@ namespace PdbReadingBenchmarks.DnlibReader
             }).ToList();
             return new MethodDebugInfo(sequencePoints, variables);
 
+        }
+
+        public void Dispose()
+        {
+	        _module?.Dispose();
+	        _reader?.Dispose();
         }
     }
 }

@@ -90,6 +90,10 @@ namespace PdbReadingBenchmarks
 
             return sequencePoints;
         }
+
+        public void Dispose()
+        {
+        }
     }
     
 }

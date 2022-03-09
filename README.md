@@ -10,6 +10,7 @@ The motivation for creating these benchmarks is more around measuring the memory
 
 ## How do these benchmarks work?
 This repo utilizes Benchmark.NET and xUnit side by side, so that you can easily benchmark or run/debug each variation. 
+In the unit tests, we employ snapshot testing with [Verify](https://github.com/VerifyTests/Verify) in order to ensure the code fragments being benchmarked for the different libraries all return the exact same result. 
 
 ## What libraries are included?
 See  [PDB Library enum](https://github.com/OmerRaviv/PdbBenchmarks/blob/main/PdbReadingBenchmarks/PdbReaderLibrary.cs#L3).
